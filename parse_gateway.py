@@ -20,11 +20,11 @@ def deserialize_erlpackage(payload):
     elif isinstance(payload, erlpack.Atom):
         return str(payload)
     elif isinstance(payload, list):
-        return [deserialize(i) for i in payload]
+        return [deserialize_erlpackage(i) for i in payload]
     elif isinstance(payload, dict):
         deserialized = {}
         for k, v in payload.items():
-            deserialized[deserialize(k)] = deserialize(v)
+            deserialized[deserialize_erlpackage(k)] = deserialize_erlpackage(v)
         return deserialized
     else:
         return payload
