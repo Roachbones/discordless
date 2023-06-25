@@ -150,3 +150,5 @@ Some features of the JSON export are incomplete. Namely:
 
 However, Wumpus In The Middle still archives this data, so any enhancements to the exporter scripts to include these features will be backwards-compatible with existing traffic archives.
 
+
+![The "programmer art" logo for Discordless, depicting Discord's Clyde mascot as a corded phone with its cord cut.](doc_images/logo.png)
