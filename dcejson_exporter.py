@@ -499,7 +499,7 @@ DCE_MESSAGE_TYPE_NAMES = {
     19: "Reply"
 }
 
-EXPORTS_DIR =                 "/media/rose/SNEAKERNET/dcejson_exports"
+EXPORTS_DIR =                 "dcejson_exports"
 EXPORT_DIR =                  os.path.join(EXPORTS_DIR, "export_" + str(int(time.time())))
 EXPORTED_DMS_DIR =            os.path.join(EXPORT_DIR, "DMs")
 EXPORTED_ASSETS_DIR =         os.path.join(EXPORT_DIR, "assets")
