@@ -1,5 +1,6 @@
 # Discordless
-Python scripts to automatically save local archives of Discord conversations and render them as HTML or [DiscordChatExporter-frontend](https://github.com/slatinsky/DiscordChatExporter-frontend) compatible JSON.
+
+Automatically save local archives of Discord conversations and render them as HTML or [DiscordChatExporter-frontend](https://github.com/slatinsky/DiscordChatExporter-frontend) compatible JSON.
 
 # How it works
 
