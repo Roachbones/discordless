@@ -138,11 +138,8 @@ class DiscordArchiver:
             "https://gateway-us-east1-d.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
             "https://gateway-us-east1-d.discord.gg/?encoding=json&v=9&compress=zlib-stream"
         ):
-            if flow.request.url.startswith("https://gateway.discord.gg/"):
-                log_info("Found a weird Gateway connection: {}. Did Discord update its API?".format(flow.request.url))
-            else:
-                log_info("Unrecognized websocket url: " + flow.request.url)
-                return
+            log_info("Unrecognized websocket url: " + flow.request.url)
+            return
         message = flow.websocket.messages[-1]
         if message.from_client:
             return
@@ -156,7 +153,8 @@ class DiscordArchiver:
             self.gateway_index_file.write(
                 " ".join((str(flow.response.timestamp_start), flow.request.url, gateway_filename_prefix)) + "\n"
             )
-
+            
+        log_info("Archiving Gateway message.")
         self.gatekeepers[flow].save(message)
     
     def response(self, flow: http.HTTPFlow) -> None:

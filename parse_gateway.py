@@ -10,6 +10,7 @@ todo: https://gateway-us-east1-d.discord.gg/?encoding=json&v=9&compress=zlib-str
 import zlib
 import json
 import erlpack
+import urllib.parse
 
 """
 Recursively convert the bytes and Atom objects in a Gateway payload to strings.
@@ -33,11 +34,7 @@ def deserialize_erlpackage(payload):
 Yields deserialized Gateway payloads for a single archived Gateway connection.
 """
 def parse_gateway(gateway_path_prefix, url):
-    if url not in (
-        "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-        "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream"
-    ):
-        print("Error: unexpected gateway url {}. parse_gateway.py needs updated to recognize it.".format(url))
+    querystring = urllib.parse.urlparse(url).query
     decompressor = zlib.decompressobj()
     buffer = bytearray()
     with open(gateway_path_prefix + "_data", "rb") as data_file, open(gateway_path_prefix + "_timeline") as timeline_file:
@@ -66,12 +63,12 @@ def parse_gateway(gateway_path_prefix, url):
             
             buffer = bytearray()
 
-            if url == "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream":
+            if querystring == "encoding=json&v=9&compress=zlib-stream":
                 payload = json.loads(payload.decode())
-            elif url == "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream":
+            elif querystring == "encoding=etf&v=9&compress=zlib-stream":
                 payload = deserialize_erlpackage(erlpack.unpack(payload))
             else:
-                assert 0, "parse_gateway.py found an unrecognized url. >_<"
+                assert 0, "Unrecognized querystring "+querystring+", did Discord upgrade its API version?"
 
             yield payload
             
