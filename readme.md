@@ -17,7 +17,7 @@ Discordless does not create any API requests or modify client behavior at all, s
 
 The archives are also "archive-grade" if you care about that; Discordless stores the raw API responses.
 
-# Install and setup
+# Install and setup - Debian based Linux
 
 You'll need to install Python, mitmproxy, and [Discord's erlpack library](https://github.com/discord/erlpack).
 
@@ -37,15 +37,72 @@ Discord uses a tool called erlpack to deserialize objects sent over the Gateway 
 
 > `pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack`
 
+# Install and setup - Windows
+
+
+Make sure Python 3.9+ is installed. There is a problem with installing `erlpack` dependency on Windows, so Python 3.11+ is not supported. To check if Python is installed, open command prompt (Windows key + R, type `cmd` and press Enter) and run command:
+```
+py --version
+```
+
+
+If Python is not installed, [download and install version 3.9.X or 3.10.X from official site](https://www.python.org/downloads/). During installation, don't forget to check checkbox "Add Python 3.X to PATH"
+
+Clone this project:
+(Open folder where you want to clone this project in file explorer, send Alt + D, type `cmd` and press Enter)
+```
+git clone https://github.com/Roachbones/discordless
+cd discordless
+```
+
+Update pip and install `erlpack` and `python-dateutil` dependencies:
+```
+py -m pip install --upgrade pip
+py -m pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack
+py -m pip install python-dateutil
+```
+
+Install mitmproxy from [official site](https://mitmproxy.org/). Mitmproxy installer for windows should automatically add `mitmproxy`, `mitmdump` and `mitmweb` to path. Close all opened command prompts to update PATH variable.
+
+Open elevated command prompt (Windows key + R, type `cmd` and press Ctrl + Shift + Enter)
+
+Generate certificates by running mitproxy the first time:
+```
+mitproxy.exe
+```
+
+Install mitmproxy certificate:
+```
+cd %UserProfile%\.mitmproxy\
+certutil -addstore root mitmproxy-ca-cert.cer
+```
+
+
 # Usage
 
-## Step one: data collection
+## Step one: data collection - Debian based Linux
 
 Start the proxy server: `mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$'`
 
 Start Discord, connected to the proxy server. If you're on a PC, you can do `discord --proxy-server=localhost:8080` to start an instance of Discord connected to the proxy without having to configure your whole computer to use the proxy. You can replace `localhost:8080` with some other address if the proxy server is running on a different device. If you're on mobile, or otherwise don't want to use that commandline argument, then configure the whole device to use the proxy server in the network settings. Due to the `--allow-hosts` argument we pass to mitmproxy, it should not interfere much with non-Discord traffic.
 
 You can tell that data collection is working if `traffic_archive/requests/` starts filling up.
+
+## Step one: data collection - Windows
+
+Start the proxy server in the first command prompt (Windows key + R, type `cmd` and press Enter):
+```
+mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$'
+```
+
+Discord executable is not in path, we need to find it manually. Open second command prompt (Windows key + R, type `cmd` and press Enter)
+```
+cd %LocalAppData%\Discord\app-<version>\
+cd app-
+[tab]
+[enter]
+discord --proxy-server=localhost:8080
+```
 
 ## Step two: export archived traffic to DCE-style JSON (or HTML)
 
