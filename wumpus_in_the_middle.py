@@ -128,7 +128,15 @@ class DiscordArchiver:
     def websocket_message(self, flow: http.HTTPFlow):
         if flow.request.url not in (
             "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream"
+            "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-a.discord.gg:443/?encoding=etf&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-a.discord.gg:443/?encoding=json&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-b.discord.gg:443/?encoding=etf&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-b.discord.gg:443/?encoding=json&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-c.discord.gg:443/?encoding=etf&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-c.discord.gg:443/?encoding=json&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-d.discord.gg:443/?encoding=etf&v=9&compress=zlib-stream",
+            "https://gateway-us-east1-d.discord.gg:443/?encoding=json&v=9&compress=zlib-stream"
         ):
             if flow.request.url.startswith("https://gateway.discord.gg/"):
                 log_info("Found a weird Gateway connection: {}. Did Discord update its API?".format(flow.request.url))
