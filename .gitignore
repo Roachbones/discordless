@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+dcejson_exports/
+html_exports/
+reference material/
+traffic_archive*/
+*.flow
+*.zip
+scrapped*
+mitmproxy
+mitmdump
+mitmweb

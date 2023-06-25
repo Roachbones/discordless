@@ -1,0 +1,113 @@
+body {
+	background-color: #202225;
+	font-family: sans-serif;	
+}
+main {
+	color: white;
+	background-color: #35383e;
+	margin: auto;
+	max-width: 64em;
+	padding: 2em;
+	word-break: break-word;
+}
+
+img, video {
+	margin: 1em;
+	max-width: 100%;
+}
+.date-divider {
+	color: #72767d;
+	font-size: 0.75rem;
+	font-weight: bold;
+	overflow: hidden;
+	text-align: center;
+	margin: 2em;
+}
+.date-divider:before,
+.date-divider:after {
+	background-color: #72767d;
+	content: "";
+	display: inline-block;
+	height: 1px;
+	position: relative;
+	vertical-align: middle;
+	width: 50%;
+}
+.date-divider:before {
+	right: 0.5em;
+	margin-left: -50%;
+}
+.date-divider:after {
+	left: 0.5em;
+	margin-right: -50%;
+}
+.message-header {
+	margin-top: 1em;
+	margin-bottom: 0.25em;
+}
+.deleted {
+	color: #72767d;
+}
+.edited {
+	color: #72767d;
+	font-size: small;
+	margin-left: 1em;
+}
+summary { /*message history*/
+	font-size: x-small;
+	color: #72767d;
+	margin-bottom: 1em;
+}
+.message-reference {
+	font-size: small;
+	padding-top: 1em;
+	padding-bottom: 0.5em;
+	padding-left: 4em;
+}
+.message-reference a {
+	text-decoration-style: dotted;
+	color: inherit;
+}
+.message {
+}
+a {
+	color: #26a2d3;
+}
+.author {
+	font-weight: bold;
+	white-space: nowrap;
+}
+.system-text {
+	color: #72767d;
+}
+time {
+	color: #72767d;
+	font-size: 0.75rem;
+}
+.attachments {
+	padding: 1em;
+}
+.attachment-link {
+	background-color: #2f3136;
+	border: thin solid #292b2f;
+	border-radius: 0.25em;
+	margin: 1em;
+	padding: 1em;
+	width: fit-content;
+}
+.reactions {
+	margin-bottom: 1em;
+	margin-left: 1em;
+	margin-top: 0.25em;
+}
+.reaction {
+	background-color: #2f3136;
+	border: thin solid #2f3136;
+	border-radius: 0.5em;
+	font-size: x-small;
+	padding: 0.5em;
+}
+.reaction.mine {
+	background-color: #3b415a;
+	border: thin solid #596aee;
+}

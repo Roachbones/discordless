@@ -1,0 +1,90 @@
+{% macro edition_div(edition, message, is_latest_edition) -%}
+{% if edition.deleted %}
+<div class="deleted">message deleted</div>
+{% else %}
+	{% if (message.needs_header and is_latest_edition) or message.system_text %}
+<div class="message-header">
+	<span class="author author-{{ message.author_id }}">{{ message.author_name }}</span>
+	{% if message.system_text %}<span class="system-text">{{ message.system_text }}</span>{% endif %}
+	<time datetime="{{ message.timestamp }}">{{ message.readable_timestamp }}</time>
+</div>
+	{% endif %}
+	{% if edition.referenced_message %}
+<div class="message-reference">↶
+		{% if edition.referenced_message.link %}<a href="{{ edition.referenced_message.link }}">{% endif %}
+	<span class="author author-{{ edition.referenced_message.author_id }}">{{ edition.referenced_message.author_name }}</span>: {{ edition.referenced_message.content }}
+		{% if edition.referenced_message.link %}</a>{% endif %}
+</div>
+	{% endif %}
+<div>
+	
+	<div class="content">{{ edition.content }}{% if edition.edited_timestamp %}<span class="edited" title="Edited at {{ edition.edited_timestamp.strftime("%m/%d/%y %H:%M:%S") }}">(edited)</span>{% endif %}</div>
+	
+	{% if edition.images %}
+	<div class="images">
+		{% for image in edition.images %}
+		<img src="{{ image }}"/>
+		{% endfor %}
+	</div>
+	{% endif %}
+	
+	{% if edition.attachment_links %}
+	<div class="attachment-links">
+		{% for attachment_link in edition.attachment_links %}
+		<div class="attachment-link">📎 <a href="{{ attachment_link }}">{{ attachment_link }}</a></div>
+		{% endfor %}
+	{% endif %}
+	
+	{% if edition.embeds_code %}
+	<summary>Embeds are in beta; click here to view the raw embed code<details>{{ edition.embeds_code }}</details></summary>
+	{% endif %}
+</div>
+{% endif %}
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ conversation_name }} chatlog</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<main>
+	{% for message in chatlog %}
+
+	{% if message.date_divider %}<div class="date-divider">{{ message.date_divider }}</div>{% endif %}
+	
+	{% if message.needs_header %}
+	<div class="message-header">
+		<span class="author author-{{ message.author_id }}">{{ message.author_name }}</span>
+		{% if message.system_text %}<span class="system-text">{{ message.system_text }}</span>{% endif %}
+		<time datetime="{{ message.timestamp }}">{{ message.display_timestamp }}</time>
+	</div>
+	{% endif %}
+	
+	<div class="message" id="message-{{ message.id }}" title="Sent at {{ message.timestamp }}">
+	
+		{{ edition_div(message.editions[-1], message) }}
+
+		{% if message.reactions %}
+		<div class="reactions">
+			{% for reaction in message.reactions %}
+			<span class="reaction{% if reaction.me %} mine{% endif %}">{{ reaction.emoji }}{% if reaction.count > 1 %} {{ reaction.count }}{% endif %}</span>
+			{% endfor %}
+		</div>
+		{% endif %}
+		
+		{% if message.editions|length > 1 %}
+		<details><summary>message history</summary><ol reversed>
+			{% for edition in message.editions[-2::-1] %}
+				<li>{{ edition_div(edition, message) }}</li>
+			{% endfor %}
+		</ol></details>
+		{% endif %}
+	</div>
+
+	{% endfor %}
+</main>
+</body>
+</html>
