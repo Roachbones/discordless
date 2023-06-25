@@ -292,7 +292,7 @@ class MessageProvenance: # Recorded history of a particular message. Sequence of
         assert observation.message_id == self.message_id
         # If we now have two deletion observations, just keep the earlier one
         if observation.dmo is None and self.observations[-1].dmo is None:
-            observations[-1] = min(observation, observations[-1])
+            self.observations[-1] = min(observation, self.observations[-1])
         self.observations.append(observation)
         self.observations.sort()
     """ Returns (author id, author username) if we've observed it, otherwise (None, None). """
