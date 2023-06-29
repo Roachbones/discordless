@@ -17,15 +17,15 @@ Discordless does not create any API requests or modify client behavior at all, s
 
 The archives are also "archive-grade" if you care about that; Discordless stores the raw API responses.
 
-# Install and setup - Debian based Linux
+# Install and setup - Debian-based Linux
 
 You'll need to install Python, mitmproxy, and [Discord's erlpack library](https://github.com/discord/erlpack).
 
 Here are example commands you can use on Ubuntu. Assumes you use Python 3.9, but any 3.x version should work.
 
-- Install Python: `sudo apt install python3.11 python3.11-dev python3.11-idle`
+- Install Python: `sudo apt install python3.9 python3.9-dev python3.9-idle`
 - Update pip: `python3.9 -m pip install --upgrade pip`
-- Install mitmproxy: download the binaries from [mitmproxy.org](https://mitmproxy.org/), or try `python3.9 -m pip install mitmproxy mitmdump`
+- Install mitmproxy: download the binaries from [mitmproxy.org](https://mitmproxy.org/)
 - [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup) on every device with a Discord client that you want to archive with. (Sometimes you also have to install it on the browser level.)
 - Install erlpack: `python3.9 -m pip install erlpack`
 
@@ -34,22 +34,29 @@ Here are example commands you can use on Ubuntu. Assumes you use Python 3.9, but
 **Not sure if this is still the case; try this if you get an error when trying to install erlpack.**
 
 Discord uses a tool called erlpack to deserialize objects sent over the Gateway websocket, but it's currently(?) broken. There's a pull request open for oliver-ni's branch, which fixes the problem, but Discord hasn't merged it. So, just install Oliver's version: 
+```
+pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack`
+```
 
-> `pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack`
+# Install and setup - Mac
+Mostly the same as the Debian-based Linux setup.
+
+- Install Python 3.9+
+- Install erlpack: `pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack`
+- [Install mitmproxy](https://docs.mitmproxy.org/stable/overview-installation/#macos): `brew install mitmproxy`
+- Run mitmproxy at least once to generate its certificate: `mitmproxy`
+- [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup): `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
 
 # Install and setup - Windows
-
 
 Make sure Python 3.9+ is installed. There is a problem with installing `erlpack` dependency on Windows, so Python 3.11+ is not supported. To check if Python is installed, open command prompt (Windows key + R, type `cmd` and press Enter) and run command:
 ```
 py --version
 ```
 
-
 If Python is not installed, [download and install version 3.9.X or 3.10.X from official site](https://www.python.org/downloads/). During installation, don't forget to check checkbox "Add Python 3.X to PATH"
 
-Clone this project:
-(Open folder where you want to clone this project in file explorer, send Alt + D, type `cmd` and press Enter)
+Clone this project (Open folder where you want to clone this project in file explorer, press Alt + D, type `cmd` and press Enter)
 ```
 git clone https://github.com/Roachbones/discordless
 cd discordless
