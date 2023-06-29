@@ -31,10 +31,10 @@ from parse_gateway import parse_gateway
 from pprint import pprint
 
 # configuration
+DRY_RUN = False
 CONSISTENT_NAMING_MODE = False
 INCLUDE_DELETED_MESSAGES = False # todo
 HOTLINK_MISSING_ASSETS = True
-DRY_RUN = 1
 MAX_FILENAME_LENGTH = 60
 CHANNELS_TO_EXPORT_IDS = None
 
