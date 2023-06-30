@@ -757,9 +757,7 @@ for channel_id, message_id_to_provenance in channel_messages.items():
             "mentions": [] # todo?
         }
         dce_channel["messages"].append(dce_message)
-
-        # DCE embed properties: title, url, timestamp, description, color, thumbnail, images, fields
-        # todo: this needs a bunch more work
+        
         for deo in dmo["embeds"]:
             dce_embed = {
                 # I think DCEF needs these keys to be specified even if absent on the Discord Embed Object
