@@ -113,7 +113,7 @@ discord --proxy-server=localhost:8080
 
 ## Step two: export archived traffic to DCE-style JSON (or HTML)
 
-Run `dcejson_exporter.py` or `html_exporter.py` to turn the data in `traffic_archive/` into an export.
+If Wumpus In The Middle is still running, restart it (ctrl+c in the terminal) to ensure it flushes its file buffers. Then run `dcejson_exporter.py` or `html_exporter.py` to turn the data in `traffic_archive/` into an export.
 
 ### DCE-style JSON
 
