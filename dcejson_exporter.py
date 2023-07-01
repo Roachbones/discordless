@@ -29,6 +29,7 @@ from shutil import copyfile
 import urllib.parse
 from parse_gateway import parse_gateway
 from pprint import pprint
+from tqdm import tqdm
 
 # configuration
 DRY_RUN = False
@@ -423,8 +424,13 @@ with open(os.path.join(ARCHIVE_PATH, "request_index")) as file:
         
 
 print("Analyzing websocket traffic.")
+# Count the total number of lines in the file
 with open(os.path.join(ARCHIVE_PATH, "gateway_index")) as file:
-    for line in file:
+    num_lines = sum(1 for _ in file)
+
+# Re-open the file and iterate through the lines with a progress bar
+with open(os.path.join(ARCHIVE_PATH, "gateway_index")) as file:
+    for line in tqdm(file, total=num_lines, smoothing=0):
         seen_timestamp, url, gateway_path_base = line.rstrip().split(" ", maxsplit=2)
         seen_timestamp = datetime.datetime.fromtimestamp(float(seen_timestamp), tz=datetime.timezone.utc)
         for payload in parse_gateway(os.path.join(ARCHIVE_PATH, "gateways", gateway_path_base), url):
