@@ -793,10 +793,12 @@ for channel_id, message_id_to_provenance in channel_messages.items():
             # Author has a "url" property, but this is actually a hyperlink to the author's page, not an asset we should mirror.
             # Instead, we need to mirror the proxy_icon_url.
             for embed_asset_type in ("author", "footer"):
-                if embed_asset_type in dce_embed:
-                    dce_embed[embed_asset_type] = {
-                        "url": embed_proxy_url_to_dce_url(deo[embed_asset_type]["proxy_icon_url"])
-                    }
+                if embed_asset_type in deo:
+                    dce_embed[embed_asset_type] = {}
+                    assert "proxy_icon_url" in deo[embed_asset_type] or "icon_url" not in deo[embed_asset_type]
+                    if "proxy_icon_url" in deo[embed_asset_type]:
+                        # todo: this does not seem to work for DCEF
+                        dce_embed[embed_asset_type]["iconUrl"] = embed_proxy_url_to_dce_url(deo[embed_asset_type]["proxy_icon_url"])
                     # Copy other properties to the exported embed.
                     for k in ("name", "url", "text"):
                         if k in deo[embed_asset_type] and k not in dce_embed[embed_asset_type]:
