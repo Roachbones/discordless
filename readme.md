@@ -54,7 +54,7 @@ Make sure Python 3.9+ is installed. There is a problem with installing `erlpack`
 py --version
 ```
 
-If Python is not installed, [download and install version 3.9.X or 3.10.X from official site](https://www.python.org/downloads/). During installation, don't forget to check checkbox "Add Python 3.X to PATH"
+If Python is not installed, [download and install version 3.9.X or 3.10.X from official site](https://www.python.org/downloads/). During installation, don't forget to check "Add Python 3.X to PATH".
 
 Clone this project (Open folder where you want to clone this project in file explorer, press Alt + D, type `cmd` and press Enter)
 ```
@@ -102,7 +102,7 @@ Start the proxy server in the first command prompt (Windows key + R, type `cmd` 
 mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$'
 ```
 
-Discord executable is not in path, we need to find it manually. Open second command prompt (Windows key + R, type `cmd` and press Enter)
+Discord executable is not in PATH; we need to find it manually. Open second command prompt (Windows key + R, type `cmd` and press Enter)
 ```
 cd %LocalAppData%\Discord\app-<version>\
 cd app-
