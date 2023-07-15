@@ -73,9 +73,9 @@ Install mitmproxy from [official site](https://mitmproxy.org/). Mitmproxy instal
 
 Open elevated command prompt (Windows key + R, type `cmd` and press Ctrl + Shift + Enter)
 
-Generate certificates by running mitproxy the first time:
+Generate certificates by running mitmproxy the first time:
 ```
-mitproxy.exe
+mitmproxy.exe
 ```
 
 Install mitmproxy certificate:
@@ -99,7 +99,7 @@ You can tell that data collection is working if `traffic_archive/requests/` star
 
 Start the proxy server in the first command prompt (Windows key + R, type `cmd` and press Enter):
 ```
-mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$'
+mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts "^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$"
 ```
 
 Discord executable is not in PATH; we need to find it manually. Open second command prompt (Windows key + R, type `cmd` and press Enter)
