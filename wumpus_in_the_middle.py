@@ -126,7 +126,7 @@ class DiscordArchiver:
         self.gatekeepers = {}
 
     def websocket_message(self, flow: http.HTTPFlow):
-        if flow.request.url not in (
+        if flow.request.pretty_url not in (
             "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
             "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream",
             "https://gateway-us-east1-a.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
@@ -138,7 +138,7 @@ class DiscordArchiver:
             "https://gateway-us-east1-d.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
             "https://gateway-us-east1-d.discord.gg/?encoding=json&v=9&compress=zlib-stream"
         ):
-            log_info("Unrecognized websocket url: " + flow.request.url)
+            log_info("Unrecognized websocket url: " + flow.request.pretty_url)
             return
         message = flow.websocket.messages[-1]
         if message.from_client:
@@ -151,14 +151,14 @@ class DiscordArchiver:
                 os.path.join(self.gateways_path, gateway_filename_prefix + "_timeline"),
             )
             self.gateway_index_file.write(
-                " ".join((str(flow.response.timestamp_start), flow.request.url, gateway_filename_prefix)) + "\n"
+                " ".join((str(flow.response.timestamp_start), flow.request.pretty_url, gateway_filename_prefix)) + "\n"
             )
             
         log_info("Archiving Gateway message.")
         self.gatekeepers[flow].save(message)
     
     def response(self, flow: http.HTTPFlow) -> None:
-        url = flow.request.url
+        url = flow.request.pretty_url
         if url_has_discord_root_domain(url) and flow.response.content:
             response_hash = str(hash(flow.response.content))
             
@@ -192,9 +192,9 @@ class DiscordArchiver:
     We only do this with file uploads, since they tend to break otherwise and often get re-downloaded anyway.
     """
     def requestheaders(self, flow):
-        if not url_has_discord_root_domain(flow.request.url):
+        if not url_has_discord_root_domain(flow.request.pretty_url):
             return
-        if flow.request.method == "POST" and flow.request.url.endswith("/attachments"):
+        if flow.request.method == "POST" and flow.request.pretty_url.endswith("/attachments"):
             log_info("Streaming attachment upload.")
             flow.request.stream = True
     
