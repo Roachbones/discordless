@@ -39,7 +39,11 @@ def parse_gateway(gateway_path_prefix, url):
     buffer = bytearray()
     with open(gateway_path_prefix + "_data", "rb") as data_file, open(gateway_path_prefix + "_timeline") as timeline_file:
         for line in timeline_file:
-            timestamp, length = line.split(" ")
+            try:
+                timestamp, length = line.split(" ")
+            except ValueError:
+                print(f"Improper line in timeline:\n{line}")
+                continue
             timestamp, length = float(timestamp), int(length)
 
             chunk = data_file.read(length)
