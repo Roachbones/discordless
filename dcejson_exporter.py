@@ -363,6 +363,9 @@ def observe_dmo(seen_timestamp, dmo, saw_update, channel_id=None, message_id=Non
             #pprint(dmo)
             # todo: support "Cannot send messages to this user", code 50007
             return
+        if "captcha_key" in dmo:
+            print("skipping dmo with captcha_key")
+            return
         channel_id = int(dmo["channel_id"])
         message_id = int(dmo["id"])
     
@@ -426,7 +429,11 @@ print("Analyzing websocket traffic.")
 with open(os.path.join(ARCHIVE_PATH, "gateway_index")) as file:
     for line in file:
         seen_timestamp, url, gateway_path_base = line.rstrip().split(" ", maxsplit=2)
-        seen_timestamp = datetime.datetime.fromtimestamp(float(seen_timestamp), tz=datetime.timezone.utc)
+        try:
+            seen_timestamp = datetime.datetime.fromtimestamp(float(seen_timestamp), tz=datetime.timezone.utc)
+        except ValueError:
+            print(f"Incorrect seen timestamp: {seen_timestamp}")
+            continue
         for payload in parse_gateway(os.path.join(ARCHIVE_PATH, "gateways", gateway_path_base), url):
             # Discord calls payload["d"] both "inner payload" and "event data", which are both bad names.
             # Here, I'll just call it the "event".
