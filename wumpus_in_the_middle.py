@@ -209,5 +209,3 @@ class DiscordArchiver:
 addons = [
     DiscordArchiver()
 ]
-
-log_info("wumpus imported")
