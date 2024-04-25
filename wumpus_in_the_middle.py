@@ -111,9 +111,10 @@ class DiscordArchiver:
 
         os.makedirs(self.requests_path, exist_ok=True)
         os.makedirs(self.gateways_path, exist_ok=True)
-        
-        self.request_index_file = open(os.path.join(self.archive_path, "request_index"), "a+") # each line: {timestamp} {method} {url} {response hash} {filename}
-        self.gateway_index_file = open(os.path.join(self.archive_path, "gateway_index"), "a+") # each line: {timestamp} {url} {gateway filename w/o _data or _timeline}
+
+        # open the index files in line buffering mode: after a line is written, changes are flushed to the disk
+        self.request_index_file = open(os.path.join(self.archive_path, "request_index"), "a+", buffering=1) # each line: {timestamp} {method} {url} {response hash} {filename}
+        self.gateway_index_file = open(os.path.join(self.archive_path, "gateway_index"), "a+", buffering=1) # each line: {timestamp} {url} {gateway filename w/o _data or _timeline}
         self.request_index_file.seek(0)
         self.gateway_index_file.seek(0)
         
@@ -208,3 +209,5 @@ class DiscordArchiver:
 addons = [
     DiscordArchiver()
 ]
+
+log_info("wumpus imported")
