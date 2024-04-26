@@ -28,17 +28,27 @@ from dateutil import parser
 from shutil import copyfile
 import urllib.parse
 from parse_gateway import parse_gateway
-from pprint import pprint
+import argparse
+
+arg_parser = argparse.ArgumentParser(prog='python3 dcejson_exporter.py')
+arg_parser.add_argument("-d","--dry",action='store_true', help="perform a dry run without actually writing any files")
+arg_parser.add_argument("-t","--traffic-archive", default="traffic_archive/", help="The traffic archive directory used for this conversion. Per default 'traffic_archive/'", metavar="<dir>")
+arg_parser.add_argument("-o","--output", default="dcejson_exports/", help="The directory to export the output into. Per default 'dcejson_exports/'", metavar="<dir>")
+# options specific to dcejson
+arg_parser.add_argument("--consistent-naming-mode",action='store_true', help="enable consistent naming mode")
+arg_parser.add_argument("--max-filename-length",type=int,default=60, help="the maximum filename length for exported files", metavar="<int>")
+options = arg_parser.parse_args()
 
 # configuration
-DRY_RUN = False
-CONSISTENT_NAMING_MODE = False
+DRY_RUN = options.dry
+EXPORTS_DIR = options.output
+CONSISTENT_NAMING_MODE = options.consistent_naming_mode
 INCLUDE_DELETED_MESSAGES = False # todo
-HOTLINK_MISSING_ASSETS = True
-MAX_FILENAME_LENGTH = 60
+HOTLINK_MISSING_ASSETS = True # according to comments below, disabling this is pointless. Therefore, this is not available as a flag
+MAX_FILENAME_LENGTH = options.max_filename_length
 CHANNELS_TO_EXPORT_IDS = None
 
-ARCHIVE_PATH = "traffic_archive/"
+ARCHIVE_PATH = options.traffic_archive
 REQUESTS_PATH = os.path.join(ARCHIVE_PATH, "requests/")
 GATEWAYS_PATH = os.path.join(ARCHIVE_PATH, "gateways/")
 
@@ -506,7 +516,6 @@ DCE_MESSAGE_TYPE_NAMES = {
     19: "Reply"
 }
 
-EXPORTS_DIR =                 "dcejson_exports"
 EXPORT_DIR =                  os.path.join(EXPORTS_DIR, "export_" + str(int(time.time())))
 EXPORTED_DMS_DIR =            os.path.join(EXPORT_DIR, "DMs")
 EXPORTED_ASSETS_DIR =         os.path.join(EXPORT_DIR, "assets")
