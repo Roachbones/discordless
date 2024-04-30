@@ -3,7 +3,7 @@ __pycache__/
 *$py.class
 
 dcejson_exports/
-html_exports/
+html_exports*/
 reference material/
 traffic_archive*/
 *.flow

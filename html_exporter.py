@@ -13,18 +13,23 @@ import re
 import json
 import time
 import datetime
+import argparse
 from dateutil import parser
 from shutil import copyfile
 from parse_gateway import parse_gateway
-from pprint import pprint
 import jinja2
 
-DRY_RUN = False
+arg_parser = argparse.ArgumentParser(prog='python3 html_exporter.py')
+arg_parser.add_argument("-d","--dry",action='store_true', help="perform a dry run without actually writing any files")
+arg_parser.add_argument("-t","--traffic-archive", default="traffic_archive/", help="The traffic archive directory used for this conversion. Per default 'traffic_archive/'", metavar="<dir>")
+arg_parser.add_argument("-o","--output", default="html_exports/", help="The directory to export the output into. Per default 'html_exports/'", metavar="<dir>")
+options = arg_parser.parse_args()
 
-archive_path = "traffic_archive/"
+DRY_RUN = options.dry
+archive_path = options.traffic_archive
 requests_path = os.path.join(archive_path, "requests/")
 gateways_path = os.path.join(archive_path, "gateways/")
-chatlogs_path = os.path.join("html_exports/", "export_" + str(int(time.time())))
+chatlogs_path = os.path.join(options.output, "export_" + str(int(time.time())))
 
 MESSAGE_TYPE_NAMES = {
     0: "DEFAULT",
