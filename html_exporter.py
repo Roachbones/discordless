@@ -260,8 +260,47 @@ print("Collected {} messages and {} attachments from {} channels.".format(
     len(channel_messages)
 ))
 
-def reasonable_filename(filename):
-    return "".join(c if c.isalnum() else "_" for c in filename).rstrip()[:80]#[:255]
+unique_id_counter = 0
+"""
+Sanitizes a file or directory name
+
+This function shall do the following to the input:
+- alphanumeric characters
+- underscores and dots
+- no two or more dots in a series
+- invalid characters shall be replaced with a underscore
+- too long filenames shall be shortened
+- if a filename is shortened, a unique suffix is added to ensure uniqueness
+- if a filename is too short, add a unique suffix
+"""
+def reasonable_filename(filename: str) -> str:
+    global unique_id_counter
+
+    ALLOWED_CHARS = ["_", "."]
+    MAX_LEN = 80
+    MIN_LEN = 3
+
+    last_c = ""
+    valid = []
+    for c in filename:
+        if not c.isalnum() and c not in ALLOWED_CHARS:
+            c = "_"
+
+        if last_c == "." and c == ".":
+            continue  # we can skip updating last_c since last_c already equals c
+
+        valid.append(c)
+        last_c = c
+
+    filename = "".join(valid)
+
+    # ensure the length is okay. Otherwise, shorten it if required and add a unique suffix
+    if not (MIN_LEN < len(filename) < MAX_LEN):
+        unique_suffix = hex(unique_id_counter)[2:]
+        unique_id_counter += 1
+        filename = filename[:MAX_LEN-len(unique_suffix)]+unique_suffix
+
+    return filename
 
 
 if not DRY_RUN:
