@@ -14,6 +14,8 @@ import json
 import time
 import datetime
 import argparse
+
+import filetype
 from dateutil import parser
 from shutil import copyfile
 from parse_gateway import parse_gateway
@@ -422,13 +424,22 @@ if not DRY_RUN:
                     for attachment in dmo["attachments"]:
                         attachment_id = attachment_url_to_id(attachment["proxy_url"])
                         if attachment_id in all_attachments:
+                            is_image = any(attachment_id.lower().endswith(ext) for ext in (".png",".jpg",".jpeg",".gif",".bmp",".webp"))
+
                             if attachment_id not in chatlog_attachments:
-                                chatlog_attachment_path = os.path.join(chatlog_attachments_path, reasonable_filename(attachment_id))
+                                # discord sometimes converts the image format. Check what kind of image it really is and add the correct suffix
+                                filename = attachment_id
+                                if is_image:
+                                    extension = filetype.guess_extension(all_attachments[attachment_id])
+                                    if extension is not None:
+                                        filename = f"{filename}.{extension}"
+
+                                chatlog_attachment_path = os.path.join(chatlog_attachments_path, reasonable_filename(filename))
                                 chatlog_attachment_rel_path = os.path.relpath(chatlog_attachment_path, chatlog_path) # used for img src in chatlog.html
                                 copyfile(all_attachments[attachment_id], chatlog_attachment_path) # Make copy of the attachment for the chatlog
                                 chatlog_attachments.add(attachment_id)
                             # todo: support videos
-                            if any(attachment_id.lower().endswith(ext) for ext in (".png",".jpg",".jpeg",".gif",".bmp",".webp")):
+                            if is_image:
                                 edition["images"].append(chatlog_attachment_rel_path)
                             else:
                                 edition["attachment_links"].append(chatlog_attachment_rel_path)
