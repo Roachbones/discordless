@@ -384,7 +384,7 @@ if not DRY_RUN:
                         attachment_id = attachment_url_to_id(attachment["proxy_url"])
                         if attachment_id in all_attachments:
                             if attachment_id not in chatlog_attachments:
-                                chatlog_attachment_path = os.path.join(chatlog_attachments_path, attachment_id) # todo: pick better file name
+                                chatlog_attachment_path = os.path.join(chatlog_attachments_path, reasonable_filename(attachment_id))
                                 chatlog_attachment_rel_path = os.path.relpath(chatlog_attachment_path, chatlog_path) # used for img src in chatlog.html
                                 copyfile(all_attachments[attachment_id], chatlog_attachment_path) # Make copy of the attachment for the chatlog
                                 chatlog_attachments.add(attachment_id)
