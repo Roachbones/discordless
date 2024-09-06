@@ -300,7 +300,7 @@ def reasonable_filename(filename: str) -> str:
     if not (MIN_LEN < len(filename) < MAX_LEN):
         unique_suffix = hex(unique_id_counter)[2:]
         unique_id_counter += 1
-        filename = filename[:MAX_LEN-len(unique_suffix)]+unique_suffix
+        filename = unique_suffix + filename[-(MAX_LEN-len(unique_suffix)):]
 
     return filename
 
