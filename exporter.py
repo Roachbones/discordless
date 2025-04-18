@@ -1,0 +1,125 @@
+import os.path
+import re
+import json
+import os.path
+from typing import Any
+
+"""
+Extracts the time from a discord snowflake id
+See https://discord.com/developers/docs/reference#snowflakes
+"""
+
+
+def snowflake_to_unix_timestamp(snowflake: int) -> float:
+    return ((snowflake >> 22) + 1420070400000) / 1000
+
+
+class ChannelMessageFile:
+    def __init__(self, request_time: float, channel_id: int, file: str):
+        self.channel_id: int = channel_id
+        self.file: str = file
+        self.request_time: float = request_time
+
+
+class AttachmentFile:
+    def __init__(self, channel_id: int, attachment_id: int):
+        self.channel_id: int = channel_id
+        self.attachment_id: int = attachment_id
+        self.files: list[str] = []
+
+
+class Message:
+    def __init__(self, observation_time: float, message_data: dict[str, Any]):
+        self.message_id: int = int(message_data["id"])
+        self.message_data: dict = message_data
+        self.creation_time: float = snowflake_to_unix_timestamp(self.message_id)
+        self.observation_time: float = observation_time
+
+
+class ChannelMessageHistory:
+    def __init__(self):
+        self.messages: dict[int, Message] = {}
+
+
+class TrafficArchive:
+    def __init__(self, traffic_archive_directory: str):
+        self.traffic_archive_directory: str = traffic_archive_directory
+        self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
+        self.attachment_files: dict[int, AttachmentFile] = {}
+
+    def file_path(self, *relative_parts: str):
+        return os.path.join(self.traffic_archive_directory, *relative_parts)
+
+
+def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
+    with open(file, "r") as request_index:
+        for index_entry in request_index:
+            seen_timestamp, method, url, response_hash, filename = index_entry.split()
+
+            # message files
+            match = re.match(r"https://discord.com/api/v9/channels/(\d*)/messages(\?|$)", url)
+            if match:
+                channel_id = int(match.group(1))
+                if channel_id not in traffic_archive.channel_message_files:
+                    traffic_archive.channel_message_files[channel_id] = []
+                traffic_archive.channel_message_files[channel_id].append(ChannelMessageFile(float(seen_timestamp), channel_id, traffic_archive.file_path("requests", filename)))
+                continue
+
+            # attachments
+            match = re.match(r"https://(?:media|cdn).discordapp.(?:com|net)/attachments/(\d+)/(\d+)/.*", url)
+            if match:
+                channel_id = int(match.group(1))
+                attachment_id = int(match.group(2))
+                # we just assume attachment ids are unique across channels
+                if attachment_id in traffic_archive.attachment_files:
+                    # but to be sure, let's check for collisions
+                    if traffic_archive.attachment_files[attachment_id].channel_id != channel_id:
+                        print(f"duplicate attachment id detected for id={attachment_id} channel={channel_id}")
+                        continue
+                # save attachment. there might be multiple versions
+                if attachment_id not in traffic_archive.attachment_files:
+                    traffic_archive.attachment_files[attachment_id] = AttachmentFile(channel_id, attachment_id)
+                traffic_archive.attachment_files[attachment_id].files.append(traffic_archive.file_path("requests", filename))
+
+
+def parse_channel_message_file(channel_file: ChannelMessageFile, history: ChannelMessageHistory):
+    with open(channel_file.file, "r") as message_file:
+        data = json.load(message_file)
+
+        # discordless unfortunately doesn't record http status codes. We have to detect errors by the content
+        if isinstance(data, dict) and "code" in data and "message" in data:
+            print(f"skipping channel message file {channel_file.file} due to discord-side errors")
+            return
+
+        # discord fails to encapsulate messages in an array if there is just one message
+        if isinstance(data, dict):
+            data = [data]
+
+        for message_observation in data:
+            message = Message(channel_file.request_time, message_observation)
+
+            if message.message_id in history.messages:
+                # determine which message is newer
+                other_message = history.messages[message.message_id]
+                if message.observation_time > other_message.observation_time:  # these are unix timestamps
+                    history.messages[message.message_id] = message
+            else:
+                history.messages[message.message_id] = message
+
+
+def parse_channel_history(channel_files: list[ChannelMessageFile]) -> ChannelMessageHistory:
+    history = ChannelMessageHistory()
+
+    for channel_file in channel_files:
+        parse_channel_message_file(channel_file, history)
+
+    return history
+
+
+archive = TrafficArchive("../discordless/traffic_archive/")
+parse_request_index_file(archive.file_path("request_index"), archive)
+
+for channel_id in archive.channel_message_files.keys():
+    parse_channel_history(archive.channel_message_files[channel_id])
+
+#parse_channel_history([ChannelMessageFile(1000,1009193568256135211,"../discordless/traffic_archive/requests/21662_discord.com_api_v9_channels_1009193568256135211_messages")])
