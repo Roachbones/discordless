@@ -35,6 +35,9 @@ class Message:
         self.creation_time: float = snowflake_to_unix_timestamp(self.message_id)
         self.observation_time: float = observation_time
 
+    def __lt__(self, other):
+        return self.creation_time < other.creation_time
+
 
 class ChannelMessageHistory:
     def __init__(self):
@@ -116,10 +119,9 @@ def parse_channel_history(channel_files: list[ChannelMessageFile]) -> ChannelMes
     return history
 
 
-archive = TrafficArchive("../discordless/traffic_archive/")
-parse_request_index_file(archive.file_path("request_index"), archive)
+if __name__ == "__main__":
+    archive = TrafficArchive("../discordless/traffic_archive/")
+    parse_request_index_file(archive.file_path("request_index"), archive)
 
-for channel_id in archive.channel_message_files.keys():
-    parse_channel_history(archive.channel_message_files[channel_id])
-
-#parse_channel_history([ChannelMessageFile(1000,1009193568256135211,"../discordless/traffic_archive/requests/21662_discord.com_api_v9_channels_1009193568256135211_messages")])
+    for channel_id in archive.channel_message_files.keys():
+        parse_channel_history(archive.channel_message_files[channel_id])
