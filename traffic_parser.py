@@ -3,6 +3,7 @@ import re
 import json
 import os.path
 from typing import Any
+import datetime
 
 """
 Extracts the time from a discord snowflake id
@@ -34,6 +35,9 @@ class Message:
         self.message_data: dict = message_data
         self.creation_time: float = snowflake_to_unix_timestamp(self.message_id)
         self.observation_time: float = observation_time
+
+    def get_message_datetime(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.creation_time, datetime.timezone.utc)
 
     def __lt__(self, other):
         return self.creation_time < other.creation_time
