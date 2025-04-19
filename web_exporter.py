@@ -14,15 +14,20 @@ import jinja2
 MESSAGES_PER_PAGE = 500
 NAVIGATION_RANGE = 10
 FILENAME_EXTENSION_MAX_LENGTH = 10
+IMAGE_MIME_TYPES = {"image/webp", "image/png", "image/jpeg","image/gif","image/avif"}
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates/"))
 page_template = jinja_environment.get_template("page.html")
 
 
 class AttachmentViewModel:
-    def __init__(self, file_name: str | None):
+    def __init__(self, file_name: str | None, is_image: bool, is_video: bool, is_audio: bool):
         self.file_name: str | None = file_name
+        self.is_image: bool = is_image
+        self.is_video: bool = is_video
+        self.is_audio: bool = is_audio
 
+KNOWN_MIMES = set()
 
 def export_channel(channel_id, history: ChannelMessageHistory, export_directory: str, traffic_archive: TrafficArchive):
     channel_directory = os.path.join(export_directory, f"channel_{channel_id}")
@@ -53,11 +58,16 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                     attachment_file_info = traffic_archive.attachment_files[attachment.attachment_id]
                     src = attachment_file_info.get_best_version()
 
-                    # compute filename
+                    # gather file info
+                    is_image = False
+                    is_video = False
+                    is_audio = False
                     mime: str = attachment.reported_mime or "application/octet-stream"
                     kind = filetype.guess(src)
                     if kind is not None:
                         mime = kind.mime
+                    if mime in IMAGE_MIME_TYPES:
+                        is_image = True
                     extension = mimetypes.guess_extension(mime)
                     if extension is None:
                         file_name_last_part = attachment.file_name.split(".")[-1]
@@ -71,9 +81,9 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                     dst = os.path.join(channel_directory, "attachments", export_filename)
                     shutil.copyfile(src, dst)
 
-                    attachment_view_models[attachment.attachment_id] = AttachmentViewModel(export_filename)
+                    attachment_view_models[attachment.attachment_id] = AttachmentViewModel(export_filename,is_image,is_video,is_audio)
                 else:
-                    attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None)
+                    attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False, False)
 
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
@@ -101,3 +111,4 @@ if __name__ == "__main__":
     # channel_id = 1009193776155205696
     # history = parse_channel_history(archive.channel_message_files[channel_id])
     # export_channel(channel_id, history, export_path, archive)
+print(KNOWN_MIMES)

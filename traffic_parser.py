@@ -30,6 +30,9 @@ class AttachmentFile:
         self.files: list[str] = []
 
     def get_best_version(self) -> str:
+        # heuristic to get the attachment in its best quality: sort by file size
+        if len(self.files) > 1:
+            self.files.sort(key=lambda file: os.path.getsize(file))
         return self.files[0]
 
 class Message:
