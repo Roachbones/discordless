@@ -24,6 +24,9 @@
             color: red;
             text-decoration: underline;
         }
+        .msg-attachment-img{
+            max-width: 100%
+        }
     </style>
 </head>
 <body>
@@ -43,13 +46,15 @@
             {% for attachment in message.attachments %}
                 <div>
                     {% if attachment_data[attachment.attachment_id].file_name %}
-                    {% if attachment_data[attachment.attachment_id].is_image %}
-                    <img src="attachments/{{ attachment_data[attachment.attachment_id].file_name }}" alt="image: {{ attachment.file_name }}" />
+                        {% if attachment_data[attachment.attachment_id].is_image %}
+                            <img class="msg-attachment-img" src="attachments/{{ attachment_data[attachment.attachment_id].file_name }}" alt="image: {{ attachment.file_name }}" />
+                        {% elif attachment_data[attachment.attachment_id].is_audio %}
+                            <audio controls src="attachments/{{ attachment_data[attachment.attachment_id].file_name }}"></audio>
+                        {% else %}
+                            <a href="attachments/{{ attachment_data[attachment.attachment_id].file_name }}">file: {{ attachment.file_name }}</a>
+                        {% endif %}
                     {% else %}
-                    <a href="attachments/{{ attachment_data[attachment.attachment_id].file_name }}">file: {{ attachment.file_name }}</a>
-                    {% endif %}
-                    {% else %}
-                    <span class="badlink">file: {{ attachment.file_name }} [not recorded]</span>
+                        <span class="badlink">file: {{ attachment.file_name }} [not recorded]</span>
                     {% endif %}
                 </div>
             {% endfor %}
