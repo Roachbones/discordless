@@ -23,7 +23,7 @@ arg_parser = argparse.ArgumentParser(prog='python3 html_exporter.py')
 arg_parser.add_argument("-d","--dry",action='store_true', help="perform a dry run without actually writing any files")
 arg_parser.add_argument("-t","--traffic-archive", default="traffic_archive/", help="The traffic archive directory used for this conversion. Per default 'traffic_archive/'", metavar="<dir>")
 arg_parser.add_argument("-o","--output", default="html_exports/", help="The directory to export the output into. Per default 'html_exports/'", metavar="<dir>")
-arg_parser.add_argument('--channel-id-dirs', default=False, help="Name channel directory according to channel id", action='store_true')
+arg_parser.add_argument('--channel-id-dirs', default=False, help="Name channel directories in the form channel_{channel id}", action='store_true')
 options = arg_parser.parse_args()
 
 DRY_RUN = options.dry
