@@ -54,22 +54,34 @@ class TextStylingRule(Rule):
         content = discord_markdown_to_html(match.group(1))
         return f"{self.start}{content}{self.end}"
 
+
 class HeaderRule(Rule):
     def __init__(self, level: int):
-        super().__init__(f"(?<!#){"#"*level}([^\n#]+)")
+        super().__init__(f"(?<!#){"#" * level}([^\n#]+)")
         self.level = level
 
     def parse(self, match: re.Match) -> str:
         content = discord_markdown_to_html(match.group(1))
         return f"<h{self.level}>{content}</h{self.level}>"
 
+
 class ListRule(Rule):
     def __init__(self):
-        super().__init__(r"- ([\S^\n]*?)\n")
+        super().__init__(r"(?:^|\n)\s*- ([^\n]*?)(?=$|\n)")
 
     def parse(self, match: re.Match) -> str:
         content = discord_markdown_to_html(match.group(1))
         return f"<ul style=\"margin:0\"><li>{content}</li></ul>"
+
+
+class UrlRule(Rule):
+    def __init__(self):
+        super().__init__(r"(https?://[a-z0-9.\-]*[a-z0-9][^\s]*)")
+
+    def parse(self, match: re.Match) -> str:
+        content = match.group(0)
+        return f"<a href=\"{content}\">{html.escape(content)}</a>"
+
 
 RULES: list[Rule] = [
     CodeBlockRule(),
@@ -82,15 +94,16 @@ RULES: list[Rule] = [
     HeaderRule(5),
     HeaderRule(6),
     # TODO: rewrite to allow reliable nesting
-    TextStylingRule(r"__\*\*\*([^_\*]+?)\*\*\*__", "<span style=\"text-decoration: underline;\"><b><i>","</i></b></span>"),
-    TextStylingRule(r"__\*\*([^_\*]+?)\*\*__", "<span style=\"text-decoration: underline;\"><b>","</b></span>"),
-    TextStylingRule(r"__\*([^_\*]+?)\*__", "<span style=\"text-decoration: underline;\"><i>","</i></span>"),
-    TextStylingRule(r"(?<!_)_([^_]+?)_(?!_)", "<i>","</i>"),
-    TextStylingRule(r"~~([^~]+?)~~", "<s>","</s>"),
-    TextStylingRule(r"(?<!\*)\*([^\*]+?)\*(?!\*)", "<i>","</i>"),
-    TextStylingRule(r"(?<!\*)\*\*([^\*]+?)\*\*(?!\*)", "<b>","</b>"),
-    TextStylingRule(r"__([^_]+?)__", "<span style=\"text-decoration: underline;\">","</span>"),
-    TextStylingRule(r"\*\*\*([^\*]+?)\*\*\*", "<b><i>","</i></b>"),
+    TextStylingRule(r"__\*\*\*([^_\*]+?)\*\*\*__", "<span style=\"text-decoration: underline;\"><b><i>", "</i></b></span>"),
+    TextStylingRule(r"__\*\*([^_\*]+?)\*\*__", "<span style=\"text-decoration: underline;\"><b>", "</b></span>"),
+    TextStylingRule(r"__\*([^_\*]+?)\*__", "<span style=\"text-decoration: underline;\"><i>", "</i></span>"),
+    TextStylingRule(r"(?<!_)_([^_]+?)_(?!_)", "<i>", "</i>"),
+    TextStylingRule(r"~~([^~]+?)~~", "<s>", "</s>"),
+    TextStylingRule(r"(?<!\*)\*([^\*]+?)\*(?!\*)", "<i>", "</i>"),
+    TextStylingRule(r"(?<!\*)\*\*([^\*]+?)\*\*(?!\*)", "<b>", "</b>"),
+    TextStylingRule(r"__([^_]+?)__", "<span style=\"text-decoration: underline;\">", "</span>"),
+    TextStylingRule(r"\*\*\*([^\*]+?)\*\*\*", "<b><i>", "</i></b>"),
+    UrlRule(),
 ]
 
 
@@ -152,7 +165,13 @@ if __name__ == "__main__":
     fake lists
     -
     -asd
-    good lists
+    a - a
+    good lists:
     - asd
     - fgh
+    
+    http://localhost/test
+    https://example.com
     """))
+
+    print(discord_markdown_to_html(" - good list"))
