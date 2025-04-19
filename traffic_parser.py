@@ -1,3 +1,4 @@
+import enum
 import os.path
 import re
 import json
@@ -28,6 +29,8 @@ class AttachmentFile:
         self.attachment_id: int = attachment_id
         self.files: list[str] = []
 
+    def get_best_version(self) -> str:
+        return self.files[0]
 
 class Message:
     def __init__(self, observation_time: float, message_data: dict[str, Any]):
@@ -36,16 +39,26 @@ class Message:
         self.observation_time: float = observation_time
         self.author_id: int = int(message_data["author"]["id"])
         self.content: str = message_data["content"]
+
         # author names must be gathered from multiple places
         self.author_name: str = message_data["author"]["global_name"]
         if self.author_name is None:
             self.author_name = message_data["author"]["username"]
+
+        self.attachments: list[Attachment] = [Attachment(data) for data in message_data["attachments"]]
 
     def get_message_datetime(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self.creation_time, datetime.timezone.utc)
 
     def __lt__(self, other):
         return self.creation_time < other.creation_time
+
+
+class Attachment:
+    def __init__(self, attachment_obj: dict[str, Any]):
+        self.attachment_id: int = int(attachment_obj["id"])
+        self.file_name: str = attachment_obj["filename"]
+        self.reported_mime: str|None = attachment_obj.get("content_type",None)
 
 
 class ChannelMessageHistory:

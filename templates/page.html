@@ -20,6 +20,10 @@
             font-size: 0.7em;
             color: gray;
         }
+        .badlink {
+            color: red;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -36,6 +40,15 @@
             </div>
             {% endif %}
             {{ message.content }}
+            {% for attachment in message.attachments %}
+                <div>
+                    {% if attachment_data[attachment.attachment_id].file_name %}
+                    <a href="attachments/{{ attachment_data[attachment.attachment_id].file_name }}">file: {{ attachment.file_name }}</a>
+                    {% else %}
+                    <span class="badlink">file: {{ attachment.file_name }} [not recorded]</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
         </div>
         {% endfor %}
 
