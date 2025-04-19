@@ -29,13 +29,13 @@
     <main>
         {% for message in messages %}
         <div id="M{{ message.message_id }}">
-            {% if not (loop.previtem and loop.previtem.message_data["author"]["id"] == message.message_data["author"]["id"]) %}
+            {% if not (loop.previtem and loop.previtem.author_id == message.author_id) %}
             <div class="msg-header">
-                <b>{{ message.message_data["author"]["global_name"] }}</b>
+                <b>{{ message.author_name }}</b>
                 <span class="msg-date">{{ message.get_message_datetime().strftime("%-d %b %Y %H:%M") }}</span>
             </div>
             {% endif %}
-            {{ message.message_data["content"] }}
+            {{ message.content }}
         </div>
         {% endfor %}
 

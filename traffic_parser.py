@@ -32,9 +32,14 @@ class AttachmentFile:
 class Message:
     def __init__(self, observation_time: float, message_data: dict[str, Any]):
         self.message_id: int = int(message_data["id"])
-        self.message_data: dict = message_data
         self.creation_time: float = snowflake_to_unix_timestamp(self.message_id)
         self.observation_time: float = observation_time
+        self.author_id: int = int(message_data["author"]["id"])
+        self.content: str = message_data["content"]
+        # author names must be gathered from multiple places
+        self.author_name: str = message_data["author"]["global_name"]
+        if self.author_name is None:
+            self.author_name = message_data["author"]["username"]
 
     def get_message_datetime(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self.creation_time, datetime.timezone.utc)
