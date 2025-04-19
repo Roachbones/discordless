@@ -27,7 +27,7 @@ Here are example commands you can use on Ubuntu. Assumes you use Python 3.9, but
 - Update pip: `python3.9 -m pip install --upgrade pip`
 - Install mitmproxy: download the binaries from [mitmproxy.org](https://mitmproxy.org/)
 - [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup) on every device with a Discord client that you want to archive with. (Sometimes you also have to install it on the browser level.)
-- Install erlpack: `python3.9 -m pip install erlpack`
+- Install filetype and erlpack: `python3.9 -m pip install filetype erlpack`
 
 ## erlpack installation issue workaround
 
@@ -66,7 +66,7 @@ Update pip and install `erlpack` and `python-dateutil` dependencies:
 ```
 py -m pip install --upgrade pip
 py -m pip install git+https://github.com/oliver-ni/erlpack.git#egg=erlpack
-py -m pip install python-dateutil
+py -m pip install python-dateutil filetype
 ```
 
 Install mitmproxy from [official site](https://mitmproxy.org/). Mitmproxy installer for windows should automatically add `mitmproxy`, `mitmdump` and `mitmweb` to path. Close all opened command prompts to update PATH variable.
