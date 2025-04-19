@@ -7,6 +7,7 @@ import os
 
 import filetype
 
+from src.discordless2.discord_markdown import discord_markdown_to_html
 from traffic_parser import *
 from itertools import batched
 import jinja2
@@ -51,6 +52,8 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
         # gather attachments
         attachment_view_models: dict[int, AttachmentViewModel] = {}
         for message in message_batch:
+            message.content = discord_markdown_to_html(message.content)
+
             for attachment in message.attachments:
                 if attachment.attachment_id in traffic_archive.attachment_files:
                     attachment_file_info = traffic_archive.attachment_files[attachment.attachment_id]
@@ -58,7 +61,6 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
 
                     # gather file info
                     is_image = False
-                    is_video = False
                     is_audio = False
                     mime: str = attachment.reported_mime or "application/octet-stream"
                     kind = filetype.guess(src)
