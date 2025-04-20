@@ -1,3 +1,4 @@
+import datetime
 import html
 import re
 from typing import Callable
@@ -24,21 +25,89 @@ class WrapContent(Rule):
             content = html.escape(match.group(1))
         return self.formatter(content)
 
+class MaskedLinkRule(Rule):
+    def __init__(self):
+        super().__init__(r"\[(\S+?)\]\((https?://[a-z0-9.\-]*[a-z0-9][^\s]*)\)")
+
+    def parse(self, match: re.Match) -> str:
+        content = match.group(1)
+        url = match.group(2)
+        return f"<a href=\"{url}\">{html.escape(content)}</a>"
 
 class UrlRule(Rule):
     def __init__(self):
-        super().__init__(r"(https?://[a-z0-9.\-]*[a-z0-9][^\s]*)")
+        super().__init__(r"<?(https?://[a-z0-9.\-]*[a-z0-9][^\s>]*)>?")
 
     def parse(self, match: re.Match) -> str:
-        content = match.group(0)
+        content = match.group(1)
         return f"<a href=\"{content}\">{html.escape(content)}</a>"
 
+class EmojiRule(Rule):
+    def __init__(self):
+        # example: <:dogekek:621141522756224000>
+        super().__init__(r"<a?:([^:]+):(\d+)>")
+
+    def parse(self, match: re.Match) -> str:
+        name = match.group(1)
+        id = match.group(2)
+        return f"<img alt=\"{html.escape(name)}\" />"
+
+class TimeWidgetRule(Rule):
+    def __init__(self):
+        # example: <t:1715154814:R>
+        super().__init__(r"<t:(\d+):(\w+)>")
+
+    def parse(self, match: re.Match) -> str:
+        timestamp = int(match.group(1))
+        dt = datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc)
+        time_kind_modifier = match.group(2)
+
+        if time_kind_modifier == "t":
+            timestr = dt.strftime("%H:%M")
+        else:
+            timestr = dt.strftime("%A, %-d %B %Y at %H:%M")
+
+        return html.escape(timestr)
+
+class UserPingRule(Rule):
+    def __init__(self):
+        # example: <@373600851529540096>
+        super().__init__(r"<@!?(\d+)>")
+
+    def parse(self, match: re.Match) -> str:
+        user_id: str = match.group(1)
+        return f"@user_{user_id}"
+
+class RolePingRule(Rule):
+    def __init__(self):
+        # example: <@&373600854529740096>
+        super().__init__(r"<@&(\d+)>")
+
+    def parse(self, match: re.Match) -> str:
+        role_id: str = match.group(1)
+        return f"@role_{role_id}"
+
+class ChannelLinkRule(Rule):
+    def __init__(self):
+        # example: <#1009193884015919217>
+        super().__init__(r"<#(\d+)>")
+
+    def parse(self, match: re.Match) -> str:
+        channel_id: str = match.group(1)
+        return f"#channel_{channel_id}"
 
 RULES: list[Rule] = [
     # structureal elements
     WrapContent(r"\`\`\`(.+?)\`\`\`", lambda content: f"<pre><code>{content}</code></pre>", recursive=False),  # code blocks
     WrapContent(r"\`([^`]+?)\`(?!\`)", lambda content: f"<code>{content}</code>", recursive=False),  # inline code
     WrapContent(r"(?:^|\n)\s*- ([^\n]*?)(?=$|\n)", lambda content: f"<ul style=\"margin:0\"><li>{content}</li></ul>"),  # lists
+
+    EmojiRule(),
+    TimeWidgetRule(),
+    UserPingRule(),
+    RolePingRule(),
+    ChannelLinkRule(), # ensure it has higher priority than h1 so the # is parsed correctly
+
     WrapContent(r"#([^\n#]+)", lambda content: f"<h1>{content}</h1>"),  # h1
     WrapContent(r"##([^\n#]+)", lambda content: f"<h2>{content}</h2>"),  # h2
     WrapContent(r"###([^\n#]+)", lambda content: f"<h3>{content}</h3>"),  # h3
@@ -53,6 +122,7 @@ RULES: list[Rule] = [
     WrapContent(r"_(.+?)_", lambda content: f"<i>{content}</i>"),  # italic using _, important: must be after underline rule so underline isn't interpreted as italic
     WrapContent(r"~~(.+?)~~", lambda content: f"<s>{content}</s>"),  # underline
 
+    MaskedLinkRule(),
     UrlRule(),
 ]
 
@@ -129,6 +199,22 @@ if __name__ == "__main__":
     
     http://localhost/test
     https://example.com
+    <https://example.com>
+    
+    [test](https://example.com)
+    [test](http://example.com)
+    [test](invalid)
+    [](http://invalid) (inner url should trigger)
+    [ ](http://invalid) (inner url should trigger)
+    
+    <:dogekek:621141528756224000>
+    <a:HanSalute:707723880655224893>
+    
+    <t:1715159814:R>
+    <t:1715159814:t>
+    <@373600854529540096>
+    <@&819559337005023272>
+    <#1009193884015919215>
     """))
 
-    print(discord_markdown_to_html("***bold italics***"))
+    print(discord_markdown_to_html("<:dogekek:621141528756224000>"))
