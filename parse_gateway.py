@@ -107,9 +107,9 @@ def parse_gateway(gateway_path_prefix, url):
                 print(f"discord websocket querystring doesn't contain a encoding scheme: {querystring}")
                 return
 
-            if querystring in {"encoding=json&v=9&compress=zlib-stream","encoding=json&v=9&compress=zstd-stream"}:
+            if query["encoding"] == "json":
                 payload = json.loads(payload.decode())
-            elif querystring in {"encoding=etf&v=9&compress=zlib-stream","encoding=etf&v=9&compress=zstd-stream"}:
+            elif query["encoding"] == "etf":
                 payload = deserialize_erlpackage(erlpack.unpack(payload))
             else:
                 assert 0, "Unrecognized querystring "+querystring+", did Discord upgrade its API version?"
