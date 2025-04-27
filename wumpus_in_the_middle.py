@@ -127,19 +127,9 @@ class DiscordArchiver:
         self.gatekeepers = {}
 
     def websocket_message(self, flow: http.HTTPFlow):
-        if flow.request.pretty_url not in (
-            "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-a.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-a.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-b.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-b.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-c.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-c.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-d.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-d.discord.gg/?encoding=json&v=9&compress=zlib-stream"
-        ):
-            log_info("Unrecognized websocket url: " + flow.request.pretty_url)
+        # aggressively capture any potential discord traffic
+        if "discord" not in flow.request.pretty_url:
+            log_info("Non-discord websocket url: " + flow.request.pretty_url)
             return
         message = flow.websocket.messages[-1]
         if message.from_client:
