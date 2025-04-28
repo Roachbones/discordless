@@ -89,13 +89,14 @@ Archives Gateway payloads for a single Gateway connection.
 class Gatekeeper:
     def __init__(self, data_path, timeline_path):
         self.data_file = open(data_path, "xb") # Every payload we get from the Gateway, concatenated.
-        self.timeline_file = open(timeline_path, "x") # Tracks when we got the Gateway payloads. Each line: {timestamp} {number of bytes received at that time}
+        self.timeline_file = open(timeline_path, "x", buffering=1) # Tracks when we got the Gateway payloads. Each line: {timestamp} {number of bytes received at that time}
 
     """
     Save Gateway payload.
     """
     def save(self, message):
         payload_length = self.data_file.write(message.content)
+        self.data_file.flush()
         self.timeline_file.write("{} {}\n".format(message.timestamp, payload_length))
     
     def done(self):
@@ -123,8 +124,10 @@ class DiscordArchiver:
             _timestamp, _method, url, response_hash, _filename = line.rstrip().split(maxsplit=4)
             self.recorded_response_hashes.add((url, response_hash))
 
-        self.recorded_gateways_count = sum(1 for line in self.gateway_index_file)
+        self.recorded_gateways_count = max(int(line.split(" ")[-1]) for line in self.gateway_index_file)+1 # find first unused gateway id
         self.gatekeepers = {}
+
+        log_info(f"first unused gateway flow id is {self.recorded_gateways_count}")
 
     def websocket_message(self, flow: http.HTTPFlow):
         if flow.request.pretty_url not in (
