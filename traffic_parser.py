@@ -68,13 +68,17 @@ class ChannelMessageHistory:
     def __init__(self):
         self.messages: dict[int, Message] = {}
 
+class ChannelMetadata:
+    def __init__(self, name: str, guild_id: int):
+        self.name: str = name
+        self.guild_id: int = guild_id
 
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
         self.traffic_archive_directory: str = traffic_archive_directory
         self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
         self.attachment_files: dict[int, AttachmentFile] = {}
-        self.channel_names: dict[int, str] = {}
+        self.channel_metadata: dict[int, ChannelMetadata] = {}
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)
@@ -152,10 +156,12 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
         # server info like channels
         if message_type == "READY":
             for guild in data["guilds"]:
-                for channel in guild["channels"]:
-                    channel_id = int(channel["id"])
-                    traffic_archive.channel_names[channel_id] = channel["name"]
+                guild_id = int(guild["id"])
 
+                if "channels" in guild:
+                    for channel in guild["channels"]:
+                        channel_id = int(channel["id"])
+                        traffic_archive.channel_metadata[channel_id] = ChannelMetadata(channel["name"], guild_id)
 
 def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
     with open(gateway_index, "r") as f:
@@ -169,7 +175,7 @@ def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
 
 
 if __name__ == "__main__":
-    archive = TrafficArchive("../discordless/traffic_archive/")
+    archive = TrafficArchive("../traffic_archive/")
 
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
     parse_request_index_file(archive.file_path("request_index"), archive)

@@ -85,9 +85,9 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
-        if channel_id in traffic_archive.channel_names:
-            channel_name = traffic_archive.channel_names[channel_id]
-            print(channel_name, channel_id)
+        if channel_id in traffic_archive.channel_metadata:
+            metadata = traffic_archive.channel_metadata[channel_id]
+            channel_name = metadata.name
         else:
             channel_name = f"Channel {channel_id}"
 
@@ -107,10 +107,8 @@ if __name__ == "__main__":
     # export_path = os.path.join("web_exports", f"export_{int(time.time())}")
     export_path = os.path.join("web_exports", f"export_latest")
 
-    archive = TrafficArchive("../discordless/traffic_archive/")
+    archive = TrafficArchive("../traffic_archive/")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
-
-    print(archive.channel_names)
 
     parse_request_index_file(archive.file_path("request_index"), archive)
 
