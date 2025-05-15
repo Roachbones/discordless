@@ -1,7 +1,5 @@
 import mimetypes
 import shutil
-import time
-from typing import Iterable
 import os.path
 import os
 

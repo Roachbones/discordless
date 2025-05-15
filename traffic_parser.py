@@ -1,10 +1,10 @@
-import enum
 import os.path
 import re
 import json
 import os.path
 from typing import Any
 import datetime
+import gateway
 
 """
 Extracts the time from a discord snowflake id
@@ -74,6 +74,7 @@ class TrafficArchive:
         self.traffic_archive_directory: str = traffic_archive_directory
         self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
         self.attachment_files: dict[int, AttachmentFile] = {}
+        self.channel_names: dict[int, str] = {}
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)
@@ -143,10 +144,36 @@ def parse_channel_history(channel_files: list[ChannelMessageFile]) -> ChannelMes
 
     return history
 
+def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, traffic_archive: TrafficArchive):
+    for message in gateway.parse_gateway_recording(gateway_timeline, gateway_data, url):
+        message_type = message["t"]
+        data = message["d"]
+
+        # server info like channels
+        if message_type == "READY":
+            for guild in data["guilds"]:
+                for channel in guild["channels"]:
+                    channel_id = int(channel["id"])
+                    traffic_archive.channel_names[channel_id] = channel["name"]
+
+
+def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
+    with open(gateway_index, "r") as f:
+        for index_entry in f:
+            timestamp, url, name = index_entry.split()
+
+            timeline_file = traffic_archive.file_path("gateways",f"{name}_timeline")
+            data_file = traffic_archive.file_path("gateways", f"{name}_data")
+
+            parse_gateway_recording(timeline_file, data_file, url, archive)
+
 
 if __name__ == "__main__":
     archive = TrafficArchive("../discordless/traffic_archive/")
+
+    parse_gateway_messages(archive.file_path("gateway_index"), archive)
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     for channel_id in archive.channel_message_files.keys():
+        print(f"parsing channel {channel_id} {archive.channel_names[channel_id]}")
         parse_channel_history(archive.channel_message_files[channel_id])
