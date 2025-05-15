@@ -5,7 +5,7 @@ import os
 
 import filetype
 
-from src.discordless2.discord_markdown import discord_markdown_to_html
+from discord_markdown import discord_markdown_to_html
 from traffic_parser import *
 from itertools import batched
 import jinja2
@@ -85,11 +85,17 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
+        if channel_id in traffic_archive.channel_names:
+            channel_name = traffic_archive.channel_names[channel_id]
+            print(channel_name, channel_id)
+        else:
+            channel_name = f"Channel {channel_id}"
+
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
             page = page_template.render(
                 page_index=page_index,
-                channel_name=f"Channel {channel_id}",
+                channel_name=channel_name,
                 nav_start=nav_start,
                 nav_end=nav_end,
                 messages=message_batch,
@@ -102,6 +108,10 @@ if __name__ == "__main__":
     export_path = os.path.join("web_exports", f"export_latest")
 
     archive = TrafficArchive("../discordless/traffic_archive/")
+    parse_gateway_messages(archive.file_path("gateway_index"), archive)
+
+    print(archive.channel_names)
+
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     for channel_id in archive.channel_message_files.keys():

@@ -165,7 +165,7 @@ def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
             timeline_file = traffic_archive.file_path("gateways",f"{name}_timeline")
             data_file = traffic_archive.file_path("gateways", f"{name}_data")
 
-            parse_gateway_recording(timeline_file, data_file, url, archive)
+            parse_gateway_recording(timeline_file, data_file, url, traffic_archive)
 
 
 if __name__ == "__main__":
