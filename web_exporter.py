@@ -87,7 +87,11 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
 
         if channel_id in traffic_archive.channel_metadata:
             metadata = traffic_archive.channel_metadata[channel_id]
-            channel_name = metadata.name
+
+            if metadata.guild_id in traffic_archive.guild_names:
+                channel_name = f"{traffic_archive.guild_names[metadata.guild_id]} - {metadata.name}"
+            else:
+                channel_name = metadata.name
         else:
             channel_name = f"Channel {channel_id}"
 
@@ -107,7 +111,9 @@ if __name__ == "__main__":
     # export_path = os.path.join("web_exports", f"export_{int(time.time())}")
     export_path = os.path.join("web_exports", f"export_latest")
 
+    print("analyzing gateways...")
     archive = TrafficArchive("../traffic_archive/")
+    print("parsing requests...")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
 
     parse_request_index_file(archive.file_path("request_index"), archive)

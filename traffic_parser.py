@@ -79,10 +79,15 @@ class TrafficArchive:
         self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
         self.attachment_files: dict[int, AttachmentFile] = {}
         self.channel_metadata: dict[int, ChannelMetadata] = {}
+        self.guild_names: dict[int, str] = {}
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)
 
+def parse_guild_profile_file(guild_profile_request_file: str):
+    with open(guild_profile_request_file, "r") as f:
+        content = json.load(f)
+        return content["name"]
 
 def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
     with open(file, "r") as request_index:
@@ -97,6 +102,12 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
                     traffic_archive.channel_message_files[channel_id] = []
                 traffic_archive.channel_message_files[channel_id].append(ChannelMessageFile(float(seen_timestamp), channel_id, traffic_archive.file_path("requests", filename)))
                 continue
+
+            # guild info
+            match = re.match(r"https://discord.com/api/v9/guilds/(\d*)/profile(\?|$)", url)
+            if match:
+                guild_id = int(match.group(1))
+                traffic_archive.guild_names[guild_id] = parse_guild_profile_file(traffic_archive.file_path("requests", filename))
 
             # attachments
             match = re.match(r"https://(?:media|cdn).discordapp.(?:com|net)/attachments/(\d+)/(\d+)/.*", url)
@@ -177,9 +188,9 @@ def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
 if __name__ == "__main__":
     archive = TrafficArchive("../traffic_archive/")
 
-    parse_gateway_messages(archive.file_path("gateway_index"), archive)
+    #parse_gateway_messages(archive.file_path("gateway_index"), archive)
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     for channel_id in archive.channel_message_files.keys():
-        print(f"parsing channel {channel_id} {archive.channel_names[channel_id]}")
+        print(f"parsing channel {channel_id} {archive.channel_metadata[channel_id].name}")
         parse_channel_history(archive.channel_message_files[channel_id])
