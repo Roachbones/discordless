@@ -3,12 +3,16 @@ import shutil
 import os.path
 import os
 import argparse
-import filetype
+import sys
 
+import filetype
+import logging
 from discord_markdown import discord_markdown_to_html
 from traffic_parser import *
 from itertools import batched
 import jinja2
+
+logger = logging.getLogger(__name__)
 
 MESSAGES_PER_PAGE = 500
 NAVIGATION_RANGE = 10
@@ -108,6 +112,8 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(levelname)s: %(message)s")
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-t","--traffic_archive",default="traffic_archive",help="The directory containing the traffic recordings that should be converted. Defaults to \"traffic_archive\"",metavar="<traffic_archive>")
@@ -119,11 +125,16 @@ if __name__ == "__main__":
     traffic_dir = args.traffic_archive
 
     archive = TrafficArchive(traffic_dir)
-    print("analyzing gateways...")
+
+    logger.info("analyzing gateways...")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
-    print("parsing requests...")
+
+    logger.info("parsing requests...")
     parse_request_index_file(archive.file_path("request_index"), archive)
 
+    logger.info("exporting channels...")
     for channel_id in archive.channel_message_files.keys():
         history = parse_channel_history(archive.channel_message_files[channel_id])
         export_channel(channel_id, history, export_dir, archive)
+
+    logger.info("done")

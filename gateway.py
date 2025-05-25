@@ -1,12 +1,14 @@
 """
 Parses Discord's zlib-encoded Gateway/websocket messages.
 """
-
+import logging
 import zlib
 import pyzstd
 import json
 import erlpack
 import urllib.parse
+
+logger = logging.getLogger(__name__)
 
 """
 Decodes the query part of a url and converts it to a dict
@@ -16,7 +18,7 @@ def decode_querystring(querystring: str) -> dict[str, str]:
     result = {}
     for key, value in data.items():
         if len(value) != 1:
-            print(f"query parameter '{key}' has been specified multiple times")
+            logger.error(f"decode_querystring: query parameter '{key}' has been specified multiple times")
             continue
         result[key] = value[0]
     return result
@@ -52,7 +54,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
 
     # get compression scheme from query
     if "compress" not in query:
-        print(f"discord websocket querystring doesn't contain a compression scheme: {querystring}")
+        logger.error(f"discord websocket querystring doesn't contain a compression scheme: {querystring}")
         return
     compression_scheme = query["compress"]
     is_zlib = compression_scheme == "zlib-stream"
@@ -63,7 +65,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
     elif is_zstd:
         decompressor = pyzstd.ZstdDecompressor()
     if decompressor is None:
-        print(f"discord websocket traffic is encoded in an unsupported compression scheme: '{compression_scheme}'")
+        logger.error(f"discord websocket traffic is encoded in an unsupported compression scheme: '{compression_scheme}'")
         return
 
     with open(gateway_data, "rb") as data_file, open(gateway_timeline, "r") as timeline_file:
@@ -71,7 +73,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
             try:
                 timestamp, length = line.split(" ")
             except ValueError:
-                print(f"Improper line in timeline:\n{line}")
+                logger.error(f"Improper line in timeline file '{gateway_timeline}':\n{line}")
                 continue
             timestamp, length = float(timestamp), int(length)
 
@@ -79,7 +81,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
             buffer.extend(chunk)
 
             if not chunk:
-                print("Incomplete gateway.")
+                logger.error(f"Incomplete gateway in '{gateway_data}'")
                 return
 
             # some form of zlib integrity checking
@@ -89,7 +91,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
             try:
                 payload = decompressor.decompress(buffer)
             except:
-                print(
+                logger.error(
                     "Error decompressing message for Gateway {}.".format(gateway_timeline)
                     + " This can happen if WitM restarts in the middle of a Gateway connection."
                     + " Skipping the rest of this Gateway."
@@ -99,7 +101,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
             buffer = bytearray()
 
             if "encoding" not in query:
-                print(f"discord websocket querystring doesn't contain a encoding scheme: {querystring}")
+                logger.error(f"discord websocket querystring doesn't contain a encoding scheme: {querystring}")
                 return
 
             if query["encoding"] == "json":

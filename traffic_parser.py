@@ -1,3 +1,4 @@
+import logging
 import os.path
 import re
 import json
@@ -6,12 +7,12 @@ from typing import Any
 import datetime
 import gateway
 
+logger = logging.getLogger(__name__)
+
 """
 Extracts the time from a discord snowflake id
 See https://discord.com/developers/docs/reference#snowflakes
 """
-
-
 def snowflake_to_unix_timestamp(snowflake: int) -> float:
     return ((snowflake >> 22) + 1420070400000) / 1000
 
@@ -118,7 +119,7 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
                 if attachment_id in traffic_archive.attachment_files:
                     # but to be sure, let's check for collisions
                     if traffic_archive.attachment_files[attachment_id].channel_id != channel_id:
-                        print(f"duplicate attachment id detected for id={attachment_id} channel={channel_id}")
+                        logger.warning(f"duplicate attachment id detected for id={attachment_id} channel={channel_id}")
                         continue
                 # save attachment. there might be multiple versions
                 if attachment_id not in traffic_archive.attachment_files:
@@ -132,7 +133,7 @@ def parse_channel_message_file(channel_file: ChannelMessageFile, history: Channe
 
         # discordless unfortunately doesn't record http status codes. We have to detect errors by the content
         if isinstance(data, dict) and "code" in data and "message" in data:
-            print(f"skipping channel message file {channel_file.file} due to discord-side errors")
+            logger.error(f"skipping channel message file {channel_file.file} due to discord-side errors")
             return
 
         # discord fails to encapsulate messages in an array if there is just one message
