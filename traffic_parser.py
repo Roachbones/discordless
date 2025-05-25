@@ -183,14 +183,3 @@ def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
             data_file = traffic_archive.file_path("gateways", f"{name}_data")
 
             parse_gateway_recording(timeline_file, data_file, url, traffic_archive)
-
-
-if __name__ == "__main__":
-    archive = TrafficArchive("../traffic_archive/")
-
-    #parse_gateway_messages(archive.file_path("gateway_index"), archive)
-    parse_request_index_file(archive.file_path("request_index"), archive)
-
-    for channel_id in archive.channel_message_files.keys():
-        print(f"parsing channel {channel_id} {archive.channel_metadata[channel_id].name}")
-        parse_channel_history(archive.channel_message_files[channel_id])

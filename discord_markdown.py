@@ -163,58 +163,58 @@ def discord_markdown_to_html(markdown: str) -> str:
     return result
 
 
-if __name__ == "__main__":
-    print(discord_markdown_to_html("""
-    normal ```codeblock``` `inline`
-    _italic_ 
-    *italic* 
-    **bold** 
-    __underline__ 
-    ***bold italics***
-    __*underline italics*__
-    __**underline bold**__
-    __***underline bold italics***__
-    ~~Strikethrough~~
-    #a
-    ##a
-    ###a
-    ####a
-    #####a
-    ######a
-    
-    fake lists
-    -
-    -asd
-    a - a
-    good lists:
-    - asd
-    - fgh
-    
-    This does get escaped: <>
-    
-    ```
-    Styling does not work *inside* code **blocks**
-    ```
-    `Styling does not work *inside* code **blocks**`
-    
-    http://localhost/test
-    https://example.com
-    <https://example.com>
-    
-    [test](https://example.com)
-    [test](http://example.com)
-    [test](invalid)
-    [](http://invalid) (inner url should trigger)
-    [ ](http://invalid) (inner url should trigger)
-    
-    <:dogekek:621141528756224000>
-    <a:HanSalute:707723880655224893>
-    
-    <t:1715159814:R>
-    <t:1715159814:t>
-    <@373600854529540096>
-    <@&819559337005023272>
-    <#1009193884015919215>
-    """))
-
-    print(discord_markdown_to_html("<:dogekek:621141528756224000>"))
+# if __name__ == "__main__":
+#     print(discord_markdown_to_html("""
+#     normal ```codeblock``` `inline`
+#     _italic_
+#     *italic*
+#     **bold**
+#     __underline__
+#     ***bold italics***
+#     __*underline italics*__
+#     __**underline bold**__
+#     __***underline bold italics***__
+#     ~~Strikethrough~~
+#     #a
+#     ##a
+#     ###a
+#     ####a
+#     #####a
+#     ######a
+#
+#     fake lists
+#     -
+#     -asd
+#     a - a
+#     good lists:
+#     - asd
+#     - fgh
+#
+#     This does get escaped: <>
+#
+#     ```
+#     Styling does not work *inside* code **blocks**
+#     ```
+#     `Styling does not work *inside* code **blocks**`
+#
+#     http://localhost/test
+#     https://example.com
+#     <https://example.com>
+#
+#     [test](https://example.com)
+#     [test](http://example.com)
+#     [test](invalid)
+#     [](http://invalid) (inner url should trigger)
+#     [ ](http://invalid) (inner url should trigger)
+#
+#     <:dogekek:621141528756224000>
+#     <a:HanSalute:707723880655224893>
+#
+#     <t:1715159814:R>
+#     <t:1715159814:t>
+#     <@373600854529540096>
+#     <@&819559337005023272>
+#     <#1009193884015919215>
+#     """))
+#
+#     print(discord_markdown_to_html("<:dogekek:621141528756224000>"))

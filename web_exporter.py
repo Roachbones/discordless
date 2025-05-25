@@ -2,7 +2,7 @@ import mimetypes
 import shutil
 import os.path
 import os
-
+import argparse
 import filetype
 
 from discord_markdown import discord_markdown_to_html
@@ -108,10 +108,17 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
 
 
 if __name__ == "__main__":
-    # export_path = os.path.join("web_exports", f"export_{int(time.time())}")
-    export_path = os.path.join("web_exports", f"export_latest")
+    parser = argparse.ArgumentParser()
 
-    archive = TrafficArchive("../traffic_archive/")
+    parser.add_argument("-t","--traffic_archive",default="traffic_archive",help="The directory containing the traffic recordings that should be converted. Defaults to \"traffic_archive\"",metavar="<traffic_archive>")
+    parser.add_argument("-o","--out_dir",default="web_exports",help="The directory to export the HTML files. Defaults to \"web_exports\"",metavar="<out_dir>")
+
+    args = parser.parse_args()
+
+    export_dir = args.out_dir
+    traffic_dir = args.traffic_archive
+
+    archive = TrafficArchive(traffic_dir)
     print("analyzing gateways...")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
     print("parsing requests...")
@@ -119,8 +126,4 @@ if __name__ == "__main__":
 
     for channel_id in archive.channel_message_files.keys():
         history = parse_channel_history(archive.channel_message_files[channel_id])
-        export_channel(channel_id, history, export_path, archive)
-
-    # channel_id = 821361165791133719
-    # history = parse_channel_history(archive.channel_message_files[channel_id])
-    # export_channel(channel_id, history, export_path, archive)
+        export_channel(channel_id, history, export_dir, archive)
