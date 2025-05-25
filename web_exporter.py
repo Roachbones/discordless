@@ -111,11 +111,10 @@ if __name__ == "__main__":
     # export_path = os.path.join("web_exports", f"export_{int(time.time())}")
     export_path = os.path.join("web_exports", f"export_latest")
 
-    print("analyzing gateways...")
     archive = TrafficArchive("../traffic_archive/")
-    print("parsing requests...")
+    print("analyzing gateways...")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
-
+    print("parsing requests...")
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     for channel_id in archive.channel_message_files.keys():
