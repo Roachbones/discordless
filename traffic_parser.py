@@ -6,7 +6,6 @@ import os.path
 from typing import Any
 import datetime
 import gateway
-
 logger = logging.getLogger(__name__)
 
 """
@@ -70,11 +69,19 @@ class ChannelMessageHistory:
         self.messages: dict[int, Message] = {}
 
 class ChannelMetadata:
-    def __init__(self, name: str, channel_id: int, guild_id: int):
-        self.name: str = name
-        self.guild_id: int = guild_id
+    def __init__(self, channel_id: int):
+        self.name: str | None = None
+        self.guild_id: int | None = None
         self.channel_id: int = channel_id
         self.message_count: int = 0
+
+    def get_name(self) -> str:
+        if self.name:
+            return self.name
+        return f"Channel {self.channel_id}"
+
+    def get_guild_id(self):
+        return self.guild_id
 
 class GuildMetadata:
     def __init__(self, name: str):
@@ -88,6 +95,11 @@ class TrafficArchive:
         self.attachment_files: dict[int, AttachmentFile] = {}
         self.channel_metadata: dict[int, ChannelMetadata] = {}
         self.guild_metadata: dict[int, GuildMetadata] = {}
+
+    def get_channel_metadata(self, channel_id: int) -> ChannelMetadata:
+        if channel_id not in self.channel_metadata:
+            self.channel_metadata[channel_id] = ChannelMetadata(channel_id) # TODO
+        return self.channel_metadata[channel_id]
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)
@@ -184,11 +196,9 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                     for channel in guild["channels"]:
                         channel_id = int(channel["id"])
 
-                        if channel_id not in traffic_archive.channel_metadata:
-                            channel_meta = ChannelMetadata(channel["name"], channel_id, guild_id)
-                            traffic_archive.channel_metadata[channel_id] = channel_meta
-                        else:
-                            channel_meta = traffic_archive.channel_metadata[channel_id]
+                        channel_meta = traffic_archive.get_channel_metadata(channel_id)
+                        channel_meta.name = channel["name"]
+                        channel_meta.guild_id = guild_id
 
                         if guild_id not in traffic_archive.guild_metadata:
                             traffic_archive.guild_metadata[guild_id] = GuildMetadata(f"Channel {guild_id}")

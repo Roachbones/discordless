@@ -42,8 +42,8 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
     messages.sort()
 
     # set flag if any messages are exported
-    if channel_id in traffic_archive.channel_metadata:
-        traffic_archive.channel_metadata[channel_id].message_count = len(messages)
+    channel_meta = traffic_archive.get_channel_metadata(channel_id)
+    channel_meta.message_count = len(messages)
 
     # export to paginated files
     LAST_PAGE = len(messages) // MESSAGES_PER_PAGE
@@ -96,15 +96,11 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
-        if channel_id in traffic_archive.channel_metadata:
-            metadata = traffic_archive.channel_metadata[channel_id]
-
-            if metadata.guild_id in traffic_archive.guild_metadata:
-                channel_name = f"{traffic_archive.guild_metadata[metadata.guild_id].name} - {metadata.name}"
-            else:
-                channel_name = metadata.name
+        metadata = traffic_archive.get_channel_metadata(channel_id)
+        if metadata.guild_id in traffic_archive.guild_metadata:
+            channel_name = f"{traffic_archive.guild_metadata[metadata.guild_id].name} - {metadata.get_name()}"
         else:
-            channel_name = f"Channel {channel_id}"
+            channel_name = metadata.name
 
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
