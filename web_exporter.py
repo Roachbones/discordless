@@ -34,6 +34,8 @@ class AttachmentViewModel:
         self.is_audio: bool = is_audio
 
 def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, export_directory: str, traffic_archive: TrafficArchive):
+    guild = traffic_archive.get_guild_metadata(channel.guild_id)
+
     channel_directory = os.path.join(export_directory, f"channel_{channel.channel_id}")
     os.makedirs(channel_directory, exist_ok=True)
     os.makedirs(os.path.join(channel_directory, "attachments"), exist_ok=True)
@@ -95,10 +97,7 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
-        if channel.guild_id in traffic_archive.guild_metadata:
-            channel_name = f"{traffic_archive.guild_metadata[channel.guild_id].name} - {channel.get_name()}"
-        else:
-            channel_name = channel.get_name()
+        channel_name = f"{guild.get_name()} - {channel.get_name()}"
 
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
@@ -111,10 +110,10 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
                 attachment_data=attachment_view_models)
             f.write(page)
 
-def write_server_index_file(guild_id: int, export_directory: str, traffic_archive: TrafficArchive):
-    guild_index_file = os.path.join(export_dir,f"server_{guild_id}.html")
+def write_server_index_file(guild: GuildMetadata, export_directory: str, traffic_archive: TrafficArchive):
+    guild_index_file = os.path.join(export_dir,f"server_{guild.guild_id}.html")
     with open(guild_index_file, "w") as f:
-        page = index_template.render(server=traffic_archive.guild_metadata[guild_id])
+        page = index_template.render(server=guild)
         f.write(page)
 
 if __name__ == "__main__":
@@ -141,13 +140,13 @@ if __name__ == "__main__":
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     logger.info("exporting channels...")
-    for channel in archive.channel_metadata.values():
+    for channel in archive.get_channels():
         history = parse_channel_history(channel.get_message_files())
         export_channel(channel, history, export_dir, archive)
 
     logger.info("exporting server channel indices...")
-    for guild_id in archive.guild_metadata.keys():
-        write_server_index_file(guild_id, export_dir, archive)
+    for guild in archive.get_guilds():
+        write_server_index_file(guild, export_dir, archive)
 
     end_time = time.time()
 
