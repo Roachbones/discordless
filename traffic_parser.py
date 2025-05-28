@@ -103,33 +103,51 @@ class GuildMetadata:
         self.channels: set[ChannelMetadata] = set()
 
     def get_name(self):
-        return self.name
+        if self.name:
+            return self.name
+        else:
+            return f"Server_{self.guild_id}"
 
     def get_channels(self):
         return self.channels
+
+    def has_accurate_information(self) -> bool:
+        return self.name is not None
 
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
         self.traffic_archive_directory: str = traffic_archive_directory
         self.attachment_files: dict[int, AttachmentFile] = {}
-        self.channel_metadata: dict[int, ChannelMetadata] = {}
-        self.guild_metadata: dict[int, GuildMetadata] = {}
+        self._channel_metadata: dict[int, ChannelMetadata] = {}
+        self._guild_metadata: dict[int, GuildMetadata] = {}
 
     def get_channel_metadata(self, channel_id: int) -> ChannelMetadata:
-        if channel_id not in self.channel_metadata:
-            self.channel_metadata[channel_id] = ChannelMetadata(channel_id)  # TODO
-        return self.channel_metadata[channel_id]
+        assert channel_id is not None
+
+        if channel_id not in self._channel_metadata:
+            self._channel_metadata[channel_id] = ChannelMetadata(channel_id)  # TODO
+        return self._channel_metadata[channel_id]
 
     def get_channels(self):
-        return self.channel_metadata.values()
+        return self._channel_metadata.values()
 
-    def get_guild_metadata(self, guid_id: int) -> GuildMetadata:
-        if guid_id not in self.guild_metadata:
-            self.guild_metadata[guid_id] = GuildMetadata(guid_id)
-        return self.guild_metadata[guid_id]
+    def get_channel_count(self) -> int:
+        return len(self._channel_metadata)
+
+    def get_guild_metadata(self, guild_id: int) -> GuildMetadata:
+        assert guild_id is not None
+
+        if guild_id not in self._guild_metadata:
+            self._guild_metadata[guild_id] = GuildMetadata(guild_id)
+        return self._guild_metadata[guild_id]
 
     def get_guilds(self):
-        return self.guild_metadata.values()
+        return self._guild_metadata.values()
+
+    def has_guild_information(self, guild_id: int) -> bool:
+        if guild_id not in self._guild_metadata:
+            return False
+        return self.get_guild_metadata(guild_id).has_accurate_information()
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)

@@ -34,7 +34,9 @@ class AttachmentViewModel:
         self.is_audio: bool = is_audio
 
 def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, export_directory: str, traffic_archive: TrafficArchive):
-    guild = traffic_archive.get_guild_metadata(channel.guild_id)
+    guild = None
+    if channel.guild_id:
+        guild = traffic_archive.get_guild_metadata(channel.guild_id)
 
     channel_directory = os.path.join(export_directory, f"channel_{channel.channel_id}")
     os.makedirs(channel_directory, exist_ok=True)
@@ -97,7 +99,10 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
-        channel_name = f"{guild.get_name()} - {channel.get_name()}"
+        if guild:
+            channel_name = f"{guild.get_name()} - {channel.get_name()}"
+        else:
+            channel_name = f"{channel.get_name()}"
 
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
@@ -140,12 +145,20 @@ if __name__ == "__main__":
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     logger.info("exporting channels...")
+    unknown_guild_counter = 0
     for channel in archive.get_channels():
         history = parse_channel_history(channel.get_message_files())
         export_channel(channel, history, export_dir, archive)
 
+        if channel.get_guild_id() is None or not archive.has_guild_information(channel.get_guild_id()):
+            unknown_guild_counter += 1
+
+    logger.info(f"Found {unknown_guild_counter} ({unknown_guild_counter/archive.get_channel_count():.1f}%) channels without guild (e.g. PMs, or channels where guild information didn't get captured.)")
+
     logger.info("exporting server channel indices...")
     for guild in archive.get_guilds():
+        if not guild.has_accurate_information():
+            logger.warning(f"No accurate information for guild {guild.guild_id}")
         write_server_index_file(guild, export_dir, archive)
 
     end_time = time.time()
