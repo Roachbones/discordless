@@ -70,9 +70,16 @@ class ChannelMessageHistory:
         self.messages: dict[int, Message] = {}
 
 class ChannelMetadata:
-    def __init__(self, name: str, guild_id: int):
+    def __init__(self, name: str, channel_id: int, guild_id: int):
         self.name: str = name
         self.guild_id: int = guild_id
+        self.channel_id: int = channel_id
+        self.message_count: int = 0
+
+class GuildMetadata:
+    def __init__(self, name: str):
+        self.name: str = name
+        self.channels: set[ChannelMetadata] = set()
 
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
@@ -80,7 +87,7 @@ class TrafficArchive:
         self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
         self.attachment_files: dict[int, AttachmentFile] = {}
         self.channel_metadata: dict[int, ChannelMetadata] = {}
-        self.guild_names: dict[int, str] = {}
+        self.guild_metadata: dict[int, GuildMetadata] = {}
 
     def file_path(self, *relative_parts: str):
         return os.path.join(self.traffic_archive_directory, *relative_parts)
@@ -108,7 +115,10 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
             match = re.match(r"https://discord.com/api/v9/guilds/(\d*)/profile(\?|$)", url)
             if match:
                 guild_id = int(match.group(1))
-                traffic_archive.guild_names[guild_id] = parse_guild_profile_file(traffic_archive.file_path("requests", filename))
+                guild_name = parse_guild_profile_file(traffic_archive.file_path("requests", filename))
+                if guild_id not in traffic_archive.guild_metadata:
+                    traffic_archive.guild_metadata[guild_id] = GuildMetadata(guild_name)
+                traffic_archive.guild_metadata[guild_id].name = guild_name # TODO: determine if this is actually a newer name
 
             # attachments
             match = re.match(r"https://(?:media|cdn).discordapp.(?:com|net)/attachments/(\d+)/(\d+)/.*", url)
@@ -173,7 +183,17 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                 if "channels" in guild:
                     for channel in guild["channels"]:
                         channel_id = int(channel["id"])
-                        traffic_archive.channel_metadata[channel_id] = ChannelMetadata(channel["name"], guild_id)
+
+                        if channel_id not in traffic_archive.channel_metadata:
+                            channel_meta = ChannelMetadata(channel["name"], channel_id, guild_id)
+                            traffic_archive.channel_metadata[channel_id] = channel_meta
+                        else:
+                            channel_meta = traffic_archive.channel_metadata[channel_id]
+
+                        if guild_id not in traffic_archive.guild_metadata:
+                            traffic_archive.guild_metadata[guild_id] = GuildMetadata(f"Channel {guild_id}")
+                        traffic_archive.guild_metadata[guild_id].channels.add(channel_meta)
+
 
 def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
     with open(gateway_index, "r") as f:

@@ -1,9 +1,11 @@
 import mimetypes
+import resource
 import shutil
 import os.path
 import os
 import argparse
 import sys
+import time
 
 import filetype
 import logging
@@ -22,6 +24,7 @@ AUDIO_MIME_TYPES = {"audio/mpeg", "audio/wav", "audio/mp4","audio/aac", "audio/a
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates/"))
 page_template = jinja_environment.get_template("page.html")
+index_template = jinja_environment.get_template("index.html")
 
 
 class AttachmentViewModel:
@@ -37,6 +40,10 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
 
     messages = list(history.messages.values())
     messages.sort()
+
+    # set flag if any messages are exported
+    if channel_id in traffic_archive.channel_metadata:
+        traffic_archive.channel_metadata[channel_id].message_count = len(messages)
 
     # export to paginated files
     LAST_PAGE = len(messages) // MESSAGES_PER_PAGE
@@ -92,8 +99,8 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
         if channel_id in traffic_archive.channel_metadata:
             metadata = traffic_archive.channel_metadata[channel_id]
 
-            if metadata.guild_id in traffic_archive.guild_names:
-                channel_name = f"{traffic_archive.guild_names[metadata.guild_id]} - {metadata.name}"
+            if metadata.guild_id in traffic_archive.guild_metadata:
+                channel_name = f"{traffic_archive.guild_metadata[metadata.guild_id].name} - {metadata.name}"
             else:
                 channel_name = metadata.name
         else:
@@ -110,6 +117,11 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                 attachment_data=attachment_view_models)
             f.write(page)
 
+def write_server_index_file(guild_id: int, export_directory: str, traffic_archive: TrafficArchive):
+    guild_index_file = os.path.join(export_dir,f"server_{guild_id}.html")
+    with open(guild_index_file, "w") as f:
+        page = index_template.render(server=traffic_archive.guild_metadata[guild_id])
+        f.write(page)
 
 if __name__ == "__main__":
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -126,6 +138,8 @@ if __name__ == "__main__":
 
     archive = TrafficArchive(traffic_dir)
 
+    start_time = time.time()
+
     logger.info("analyzing gateways...")
     parse_gateway_messages(archive.file_path("gateway_index"), archive)
 
@@ -137,4 +151,11 @@ if __name__ == "__main__":
         history = parse_channel_history(archive.channel_message_files[channel_id])
         export_channel(channel_id, history, export_dir, archive)
 
-    logger.info("done")
+    logger.info("exporting server channel indices...")
+    for guild_id in archive.guild_metadata.keys():
+        write_server_index_file(guild_id, export_dir, archive)
+
+    end_time = time.time()
+
+    memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss + resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    logger.info(f"done in {(end_time-start_time):.1f}s, maxrss={memory_usage}")

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{{ server.name }} - Channels</title>
+    <style>
+        main {
+            max-width: 48em;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .badlink {
+            color: red;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <main>
+        <h1>{{ server.name }} - Channels</h1>
+        <ul>
+            {% for channel in server.channels %}
+                {% if channel.message_count > 0 %}
+                    <li><a href="channel_{{ channel.channel_id }}/page_1.html">{{ channel.name }}</a></li>
+                {% else %}
+                    <li><span class="badlink">{{ channel.name }}</span></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </main>
+</div>
+</body>
+</html>

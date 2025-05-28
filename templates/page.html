@@ -31,9 +31,8 @@
 </head>
 <body>
 <div class="content">
-    <h1>{{ channel_name }} - Page {{ page_index+1 }}</h1>
-
     <main>
+        <h1>{{ channel_name }} - Page {{ page_index+1 }}</h1>
         {% for message in messages %}
         <div id="M{{ message.message_id }}">
             {% if not (loop.previtem and loop.previtem.author_id == message.author_id) %}
