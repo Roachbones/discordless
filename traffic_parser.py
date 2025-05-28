@@ -105,6 +105,9 @@ class GuildMetadata:
     def get_name(self):
         return self.name
 
+    def get_channels(self):
+        return self.channels
+
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
         self.traffic_archive_directory: str = traffic_archive_directory
