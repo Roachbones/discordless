@@ -33,8 +33,8 @@ class AttachmentViewModel:
         self.is_image: bool = is_image
         self.is_audio: bool = is_audio
 
-def export_channel(channel_id, history: ChannelMessageHistory, export_directory: str, traffic_archive: TrafficArchive):
-    channel_directory = os.path.join(export_directory, f"channel_{channel_id}")
+def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, export_directory: str, traffic_archive: TrafficArchive):
+    channel_directory = os.path.join(export_directory, f"channel_{channel.channel_id}")
     os.makedirs(channel_directory, exist_ok=True)
     os.makedirs(os.path.join(channel_directory, "attachments"), exist_ok=True)
 
@@ -42,8 +42,7 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
     messages.sort()
 
     # set flag if any messages are exported
-    channel_meta = traffic_archive.get_channel_metadata(channel_id)
-    channel_meta.message_count = len(messages)
+    channel.message_count = len(messages)
 
     # export to paginated files
     LAST_PAGE = len(messages) // MESSAGES_PER_PAGE
@@ -96,11 +95,10 @@ def export_channel(channel_id, history: ChannelMessageHistory, export_directory:
                 else:
                     attachment_view_models[attachment.attachment_id] = AttachmentViewModel(None, False, False)
 
-        metadata = traffic_archive.get_channel_metadata(channel_id)
-        if metadata.guild_id in traffic_archive.guild_metadata:
-            channel_name = f"{traffic_archive.guild_metadata[metadata.guild_id].name} - {metadata.get_name()}"
+        if channel.guild_id in traffic_archive.guild_metadata:
+            channel_name = f"{traffic_archive.guild_metadata[channel.guild_id].name} - {channel.get_name()}"
         else:
-            channel_name = metadata.name
+            channel_name = channel.get_name()
 
         message_file = os.path.join(channel_directory, f"page_{page_index + 1}.html")
         with open(message_file, "w") as f:
@@ -145,7 +143,7 @@ if __name__ == "__main__":
     logger.info("exporting channels...")
     for channel in archive.channel_metadata.values():
         history = parse_channel_history(channel.get_message_files())
-        export_channel(channel.channel_id, history, export_dir, archive)
+        export_channel(channel, history, export_dir, archive)
 
     logger.info("exporting server channel indices...")
     for guild_id in archive.guild_metadata.keys():
