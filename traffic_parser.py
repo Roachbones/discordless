@@ -74,6 +74,7 @@ class ChannelMetadata:
         self.guild_id: int | None = None
         self.channel_id: int = channel_id
         self.message_count: int = 0
+        self.message_files: list[ChannelMessageFile] = []
 
     def get_name(self) -> str:
         if self.name:
@@ -83,6 +84,12 @@ class ChannelMetadata:
     def get_guild_id(self):
         return self.guild_id
 
+    def add_message_file(self, file: ChannelMessageFile):
+        self.message_files.append(file)
+
+    def get_message_files(self):
+        return self.message_files
+
 class GuildMetadata:
     def __init__(self, name: str):
         self.name: str = name
@@ -91,7 +98,6 @@ class GuildMetadata:
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
         self.traffic_archive_directory: str = traffic_archive_directory
-        self.channel_message_files: dict[int, list[ChannelMessageFile]] = {}
         self.attachment_files: dict[int, AttachmentFile] = {}
         self.channel_metadata: dict[int, ChannelMetadata] = {}
         self.guild_metadata: dict[int, GuildMetadata] = {}
@@ -118,9 +124,9 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
             match = re.match(r"https://discord.com/api/v9/channels/(\d*)/messages(\?|$)", url)
             if match:
                 channel_id = int(match.group(1))
-                if channel_id not in traffic_archive.channel_message_files:
-                    traffic_archive.channel_message_files[channel_id] = []
-                traffic_archive.channel_message_files[channel_id].append(ChannelMessageFile(float(seen_timestamp), channel_id, traffic_archive.file_path("requests", filename)))
+
+                channel_metadata = traffic_archive.get_channel_metadata(channel_id)
+                channel_metadata.add_message_file(ChannelMessageFile(float(seen_timestamp), channel_id, traffic_archive.file_path("requests", filename)))
                 continue
 
             # guild info

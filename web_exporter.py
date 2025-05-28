@@ -143,9 +143,9 @@ if __name__ == "__main__":
     parse_request_index_file(archive.file_path("request_index"), archive)
 
     logger.info("exporting channels...")
-    for channel_id in archive.channel_message_files.keys():
-        history = parse_channel_history(archive.channel_message_files[channel_id])
-        export_channel(channel_id, history, export_dir, archive)
+    for channel in archive.channel_metadata.values():
+        history = parse_channel_history(channel.get_message_files())
+        export_channel(channel.channel_id, history, export_dir, archive)
 
     logger.info("exporting server channel indices...")
     for guild_id in archive.guild_metadata.keys():
