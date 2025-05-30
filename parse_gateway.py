@@ -112,7 +112,7 @@ def parse_gateway(gateway_path_prefix, url):
             elif query["encoding"] == "etf":
                 payload = deserialize_erlpackage(erlpack.unpack(payload))
             else:
-                assert 0, "Unrecognized querystring "+querystring+", did Discord upgrade its API version?"
+                assert 0, "Unrecognized encoding " + query["encoding"] + ", did Discord upgrade its API version?"
 
             yield payload
             
