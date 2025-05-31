@@ -73,6 +73,9 @@ def url_has_discord_root_domain(url):
         any(hostname.endswith(domain) for domain in DISCORD_DOMAINS)
     )
 
+def url_is_gateway(url):
+    return url_has_discord_root_domain(url) and "gateway" in url
+
 """
 Lossily turn a string into a reasonable/safe filename, possibly truncating it.
 Uses a max filename length of 255.
@@ -128,8 +131,8 @@ class DiscordArchiver:
 
     def websocket_message(self, flow: http.HTTPFlow):
         # aggressively capture any potential discord traffic
-        if "discord" not in flow.request.pretty_url:
-            log_info("Non-discord websocket url: " + flow.request.pretty_url)
+        if not url_is_gateway(flow.request.pretty_url):
+            log_info("websocket message is from non-gateway traffic: " + flow.request.pretty_url)
             return
         message = flow.websocket.messages[-1]
         if message.from_client:
