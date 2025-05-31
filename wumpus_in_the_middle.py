@@ -123,7 +123,7 @@ class DiscordArchiver:
             _timestamp, _method, url, response_hash, _filename = line.rstrip().split(maxsplit=4)
             self.recorded_response_hashes.add((url, response_hash))
 
-        self.recorded_gateways_count = max(int(line.split(" ")[-1]) for line in self.gateway_index_file)+1 # find first unused gateway id
+        self.recorded_gateways_count = max((int(line.split(" ")[-1])+1 for line in self.gateway_index_file),default=0) # find first unused gateway id
         self.gatekeepers = {}
 
         log_info(f"first unused gateway flow id is {self.recorded_gateways_count}")
