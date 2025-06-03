@@ -73,6 +73,9 @@ def url_has_discord_root_domain(url):
         any(hostname.endswith(domain) for domain in DISCORD_DOMAINS)
     )
 
+def url_is_gateway(url):
+    return url_has_discord_root_domain(url) and "gateway" in url
+
 """
 Lossily turn a string into a reasonable/safe filename, possibly truncating it.
 Uses a max filename length of 255.
@@ -129,19 +132,9 @@ class DiscordArchiver:
         log_info(f"first unused gateway flow id is {self.recorded_gateways_count}")
 
     def websocket_message(self, flow: http.HTTPFlow):
-        if flow.request.pretty_url not in (
-            "https://gateway.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-a.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-a.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-b.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-b.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-c.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-c.discord.gg/?encoding=json&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-d.discord.gg/?encoding=etf&v=9&compress=zlib-stream",
-            "https://gateway-us-east1-d.discord.gg/?encoding=json&v=9&compress=zlib-stream"
-        ):
-            log_info("Unrecognized websocket url: " + flow.request.pretty_url)
+        # aggressively capture any potential discord traffic
+        if not url_is_gateway(flow.request.pretty_url):
+            log_info("websocket message is from non-gateway traffic: " + flow.request.pretty_url)
             return
         message = flow.websocket.messages[-1]
         if message.from_client:
