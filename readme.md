@@ -95,6 +95,10 @@ Start Discord, connected to the proxy server. If you're on a PC, you can do `dis
 
 You can tell that data collection is working if `traffic_archive/requests/` starts filling up.
 
+To make this the default way to launch Discord, assuming your Discord is installed using Flatpak, first create a copy of Discord's .desktop file: `cp /var/lib/flatpak/exports/share/applications/com.discordapp.Discord.desktop ~/.local/share/applications/com.discordapp.Discord.desktop`
+
+Then edit this new file, locate the `Exec` line, and add the `--proxy-server` parameter, for example like this: `Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=com.discordapp.Discord --file-forwarding com.discordapp.Discord --proxy-server=localhost:9991 @@u %U @@`
+
 ## Step one: data collection - Windows
 
 Start the proxy server in the first command prompt (Windows key + R, type `cmd` and press Enter):
