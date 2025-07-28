@@ -128,8 +128,16 @@ if __name__ == "__main__":
 
     parser.add_argument("-t","--traffic_archive",default="traffic_archive",help="The directory containing the traffic recordings that should be converted. Defaults to \"traffic_archive\"",metavar="<traffic_archive>")
     parser.add_argument("-o","--out_dir",default="web_exports",help="The directory to export the HTML files. Defaults to \"web_exports\"",metavar="<out_dir>")
+    parser.add_argument("--limit-guilds", help="Limit the export to the following guild IDs", metavar="<guild id>", action="append", nargs="+")
 
     args = parser.parse_args()
+
+    allowed_guilds = None
+    if args.limit_guilds:
+        allowed_guilds = set()
+        for lst in args.limit_guilds:
+            for guild_id in lst:
+                allowed_guilds.add(int(guild_id))
 
     export_dir = args.out_dir
     traffic_dir = args.traffic_archive
@@ -147,6 +155,10 @@ if __name__ == "__main__":
     logger.info("exporting channels...")
     unknown_guild_counter = 0
     for channel in archive.get_channels():
+        guild_id = channel.get_guild_id()
+        if (allowed_guilds is not None) and ((guild_id is None) or (guild_id not in allowed_guilds)):
+            continue
+
         history = parse_channel_history(channel.get_message_files())
         export_channel(channel, history, export_dir, archive)
 
@@ -157,6 +169,8 @@ if __name__ == "__main__":
 
     logger.info("exporting server channel indices...")
     for guild in archive.get_guilds():
+        if (allowed_guilds is not None) and (guild.guild_id not in allowed_guilds):
+            continue
         if not guild.has_accurate_information():
             logger.warning(f"No accurate information for guild {guild.guild_id}")
         write_server_index_file(guild, export_dir, archive)
