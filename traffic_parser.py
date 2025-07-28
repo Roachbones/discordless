@@ -242,6 +242,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
         if message_type == "READY":
             for guild in data["guilds"]:
                 guild_id = int(guild["id"])
+                guild_meta = traffic_archive.get_guild_metadata(guild_id)
 
                 if "channels" in guild:
                     for channel in guild["channels"]:
@@ -251,8 +252,14 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                         channel_meta.name = channel["name"]
                         channel_meta.guild_id = guild_id
 
-                        guild = traffic_archive.get_guild_metadata(guild_id)
-                        guild.channels.add(channel_meta)
+                        guild_meta.channels.add(channel_meta)
+
+                if "threads" in guild:
+                    for thread in guild["threads"]:
+                        channel_meta = traffic_archive.get_channel_metadata(thread["id"])
+                        channel_meta.name = f"thread: {thread["name"]}"
+                        channel_meta.guild_id = guild_id
+                        guild_meta.channels.add(channel_meta)
 
 
 def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):

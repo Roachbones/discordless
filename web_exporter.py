@@ -155,6 +155,7 @@ if __name__ == "__main__":
     logger.info("exporting channels...")
     unknown_guild_counter = 0
     for channel in archive.get_channels():
+
         guild_id = channel.get_guild_id()
         if (allowed_guilds is not None) and ((guild_id is None) or (guild_id not in allowed_guilds)):
             continue
