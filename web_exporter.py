@@ -10,6 +10,7 @@ import time
 import filetype
 import logging
 from discord_markdown import discord_markdown_to_html
+from metrics import MetricsReport
 from traffic_parser import *
 from itertools import batched
 import jinja2
@@ -129,6 +130,7 @@ if __name__ == "__main__":
     parser.add_argument("-t","--traffic_archive",default="traffic_archive",help="The directory containing the traffic recordings that should be converted. Defaults to \"traffic_archive\"",metavar="<traffic_archive>")
     parser.add_argument("-o","--out_dir",default="web_exports",help="The directory to export the HTML files. Defaults to \"web_exports\"",metavar="<out_dir>")
     parser.add_argument("--limit-guilds", help="Limit the export to the following guild IDs", metavar="<guild id>", action="append", nargs="+")
+    parser.add_argument("--metrics-file", help="Export a prometheus metrics file", metavar="<metrics file>")
 
     args = parser.parse_args()
 
@@ -143,17 +145,17 @@ if __name__ == "__main__":
     traffic_dir = args.traffic_archive
 
     archive = TrafficArchive(traffic_dir)
+    metrics = MetricsReport()
 
     start_time = time.time()
 
     logger.info("analyzing gateways...")
-    parse_gateway_messages(archive.file_path("gateway_index"), archive)
+    parse_gateway_messages(archive.file_path("gateway_index"), archive, metrics)
 
     logger.info("parsing requests...")
-    parse_request_index_file(archive.file_path("request_index"), archive)
+    parse_request_index_file(archive.file_path("request_index"), archive, metrics)
 
     logger.info("exporting channels...")
-    unknown_guild_counter = 0
     for channel in archive.get_channels():
 
         guild_id = channel.get_guild_id()
@@ -164,9 +166,9 @@ if __name__ == "__main__":
         export_channel(channel, history, export_dir, archive)
 
         if channel.get_guild_id() is None or not archive.has_guild_information(channel.get_guild_id()):
-            unknown_guild_counter += 1
+            metrics.unknown_guild_count += 1
 
-    logger.info(f"Found {unknown_guild_counter} ({unknown_guild_counter/archive.get_channel_count():.1f}%) channels without guild (e.g. PMs, or channels where guild information didn't get captured.)")
+    logger.info(f"Found {metrics.unknown_guild_count} ({metrics.unknown_guild_count/archive.get_channel_count():.1f}%) channels without guild (e.g. PMs, or channels where guild information didn't get captured.)")
 
     logger.info("exporting server channel indices...")
     for guild in archive.get_guilds():
@@ -177,6 +179,13 @@ if __name__ == "__main__":
         write_server_index_file(guild, export_dir, archive)
 
     end_time = time.time()
+    metrics.runtime = end_time-start_time
+    metrics.channel_count = archive.get_channel_count()
+    metrics.guild_count = archive.get_guild_count()
+    metrics.attachment_count = archive.get_attachment_count()
 
-    memory_usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss + resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
-    logger.info(f"done in {(end_time-start_time):.1f}s, maxrss={memory_usage}")
+    metrics.maxrss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss + resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    logger.info(f"done in {metrics.runtime:.1f}s, maxrss={metrics.maxrss}")
+
+    if args.metrics_file:
+        metrics.write(args.metrics_file)

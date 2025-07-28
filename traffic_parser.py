@@ -6,6 +6,7 @@ import os.path
 from typing import Any
 import datetime
 import gateway
+from metrics import MetricsReport
 
 logger = logging.getLogger(__name__)
 
@@ -128,11 +129,17 @@ class TrafficArchive:
             self._channel_metadata[channel_id] = ChannelMetadata(channel_id)  # TODO
         return self._channel_metadata[channel_id]
 
+    def get_attachment_count(self) -> int:
+        return len(self.attachment_files)
+
     def get_channels(self):
         return self._channel_metadata.values()
 
     def get_channel_count(self) -> int:
         return len(self._channel_metadata)
+
+    def get_guild_count(self) -> int:
+        return len(self._guild_metadata)
 
     def get_guild_metadata(self, guild_id: int) -> GuildMetadata:
         assert guild_id is not None
@@ -159,10 +166,16 @@ def parse_guild_profile_file(guild_profile_request_file: str):
         return content["name"]
 
 
-def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
+def parse_request_index_file(file: str, traffic_archive: TrafficArchive, metrics: MetricsReport):
+    latest_timestamp = 0
     with open(file, "r") as request_index:
         for index_entry in request_index:
             seen_timestamp, method, url, response_hash, filename = index_entry.split()
+
+            seen_timestamp = float(seen_timestamp)
+            if seen_timestamp > latest_timestamp:
+                latest_timestamp = seen_timestamp
+
 
             # message files
             match = re.match(r"https://discord.com/api/v9/channels/(\d*)/messages(\?|$)", url)
@@ -170,7 +183,7 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
                 channel_id = int(match.group(1))
 
                 channel_metadata = traffic_archive.get_channel_metadata(channel_id)
-                channel_metadata.add_message_file(ChannelMessageFile(float(seen_timestamp), channel_id, traffic_archive.file_path("requests", filename)))
+                channel_metadata.add_message_file(ChannelMessageFile(seen_timestamp, channel_id, traffic_archive.file_path("requests", filename)))
                 continue
 
             # guild info
@@ -197,6 +210,8 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive):
                 if attachment_id not in traffic_archive.attachment_files:
                     traffic_archive.attachment_files[attachment_id] = AttachmentFile(channel_id, attachment_id)
                 traffic_archive.attachment_files[attachment_id].files.append(traffic_archive.file_path("requests", filename))
+
+    metrics.latest_request_timestamp = latest_timestamp
 
 
 def parse_channel_message_file(channel_file: ChannelMessageFile, history: ChannelMessageHistory):
@@ -262,12 +277,19 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                         guild_meta.channels.add(channel_meta)
 
 
-def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive):
+def parse_gateway_messages(gateway_index: str, traffic_archive: TrafficArchive, metrics: MetricsReport):
+    latest_timestamp = 0
     with open(gateway_index, "r") as f:
         for index_entry in f:
             timestamp, url, name = index_entry.split()
+
+            timestamp = float(timestamp)
+            if timestamp > latest_timestamp:
+                latest_timestamp = timestamp
 
             timeline_file = traffic_archive.file_path("gateways", f"{name}_timeline")
             data_file = traffic_archive.file_path("gateways", f"{name}_data")
 
             parse_gateway_recording(timeline_file, data_file, url, traffic_archive)
+
+    metrics.latest_gateway_timestamp = latest_timestamp
