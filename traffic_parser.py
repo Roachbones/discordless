@@ -163,7 +163,10 @@ class TrafficArchive:
 def parse_guild_profile_file(guild_profile_request_file: str):
     with open(guild_profile_request_file, "r") as f:
         content = json.load(f)
-        return content["name"]
+        if "name" in content:
+            return content["name"]
+        print(f"error: guild profile doesn't contain name: {content}")
+        return None
 
 
 def parse_request_index_file(file: str, traffic_archive: TrafficArchive, metrics: MetricsReport):
@@ -192,8 +195,9 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive, metrics
                 guild_id = int(match.group(1))
                 guild_name = parse_guild_profile_file(traffic_archive.file_path("requests", filename))
 
-                guild = traffic_archive.get_guild_metadata(guild_id)
-                guild.name = guild_name  # TODO: determine if this is actually a newer name
+                if guild_name is not None:
+                    guild = traffic_archive.get_guild_metadata(guild_id)
+                    guild.name = guild_name  # TODO: determine if this is actually a newer name
 
             # attachments
             match = re.match(r"https://(?:media|cdn).discordapp.(?:com|net)/attachments/(\d+)/(\d+)/.*", url)
