@@ -1,0 +1,10 @@
+services:
+  discordless:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./traffic_archive:/app/traffic_archive:z
+      - ./dcejson_exports:/app/dcejson_exports:z
+      - ~/.mitmproxy:/root/.mitmproxy:z
+    ports:
+      - 127.0.0.1:8080:8080
