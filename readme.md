@@ -74,12 +74,23 @@ cd %UserProfile%\.mitmproxy\
 certutil -addstore root mitmproxy-ca-cert.cer
 ```
 
+# Install and setup - Docker
+
+You'll need to [install Docker and Docker Compose](https://docs.docker.com/engine/install). Clone this repository, then run:
+
+```bash
+docker compose up --build
+```
+
+Your mitmproxy certificate will be stored in `~/.mitmproxy`. [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup) on every device with a Discord client that you want to archive with. (Sometimes you also have to install it on the browser level.)
 
 # Usage
 
 ## Step one: data collection - Debian based Linux
 
 Start the proxy server: `mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))(?::\d+)?$'`
+
+(For Docker users, as long as your server is up, you do not need to run this.)
 
 Start Discord, connected to the proxy server. If you're on a PC, you can do `discord --proxy-server=localhost:8080` to start an instance of Discord connected to the proxy without having to configure your whole computer to use the proxy. You can replace `localhost:8080` with some other address if the proxy server is running on a different device. If you're on mobile, or otherwise don't want to use that commandline argument, then configure the whole device to use the proxy server in the network settings. Due to the `--allow-hosts` argument we pass to mitmproxy, it should not interfere much with non-Discord traffic.
 
@@ -115,6 +126,8 @@ If Wumpus In The Middle is still running, restart it (ctrl+c in the terminal) to
 ### DCE-style JSON
 
 `dcejson_exporter.py` reads the data in `traffic_archive` and outputs a [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter)-style JSON export to `dcejson_exports/export_{current Unix time}/`. You can feed that export into [DiscordChatExporter-frontend](https://github.com/slatinsky/DiscordChatExporter-frontend) to neatly display it in a Discord-style interface.
+
+(For Docker users, you can run this by running `docker exec discordless-discordless-1 python dcejson_exporter.py && docker restart discordless-dcebox-frontend-1`. You can do this in any directory, though the files will be stored in `$PROJECT_ROOT/dcejson_exports`.)
 
 ### HTML
 

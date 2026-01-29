@@ -1,0 +1,8 @@
+/Dockerfile
+/docker-compose.yml
+/readme.md
+/LICENSE
+/.gitignore
+/.dockerignore
+/doc_images
+/traffic_archive
