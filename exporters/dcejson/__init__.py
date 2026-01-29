@@ -1,5 +1,6 @@
 from .. import registry
 import argparse
+from . import dcejson_exporter
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument("-d","--dry",action='store_true', help="perform a dry run without actually writing any files")
@@ -9,5 +10,5 @@ arg_parser.add_argument("--consistent-naming-mode",action='store_true', help="en
 arg_parser.add_argument("--max-filename-length",type=int,default=60, help="the maximum filename length for exported files", metavar="<int>")
 
 @registry.register_exporter("dcejson",arg_parser, description="Convert discordless traffic archives to DiscordChatExporter JSON files.")
-def dcejson_exporter(args):
-    print("hi from the dcejson exporter")
+def dcejson_exporter_backend(args):
+    dcejson_exporter.dcesjon_exporter_main(args)
