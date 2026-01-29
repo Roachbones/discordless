@@ -12,5 +12,3 @@ scrapped*
 mitmproxy
 mitmdump
 mitmweb
-
-/docker-compose.override.yml

@@ -17,24 +17,6 @@ Discordless does not create any API requests or modify client behavior at all, s
 
 The archives are also "archive-grade" if you care about that; Discordless stores the raw API responses.
 
-# Install and setup - Docker
-
-You'll need to [install Docker and Docker Compose](https://docs.docker.com/engine/install). Clone this repository, then run:
-
-```bash
-docker compose up --build
-```
-
-Your mitmproxy certificate will be stored in `~/.mitmproxy`. [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup) on every device with a Discord client that you want to archive with. (Sometimes you also have to install it on the browser level.)
-
-If you wish to also run the [Discord Chat Exporter frontend](https://github.com/slatinsky/DiscordChatExporter-frontend), you can copy the Docker Compose override file...
-
-```bash
-cp docker-compose.override.example.yml docker-compose.override.yml
-```
-
-... and uncomment the file.
-
 # Install and setup - Debian-based Linux
 
 You'll need to install Python, mitmproxy, and [Discord's erlpack library](https://github.com/discord/erlpack).
@@ -92,6 +74,15 @@ cd %UserProfile%\.mitmproxy\
 certutil -addstore root mitmproxy-ca-cert.cer
 ```
 
+# Install and setup - Docker
+
+You'll need to [install Docker and Docker Compose](https://docs.docker.com/engine/install). Clone this repository, then run:
+
+```bash
+docker compose up --build
+```
+
+Your mitmproxy certificate will be stored in `~/.mitmproxy`. [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup) on every device with a Discord client that you want to archive with. (Sometimes you also have to install it on the browser level.)
 
 # Usage
 
