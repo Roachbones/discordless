@@ -18,7 +18,7 @@ def uwu_exporter(args):
 """
 
 # noinspection PyUnusedImports
-import exporters.html, exporters.dcejson
+import exporters.html, exporters.dcejson, exporters.htmeml
 
 import exporters.registry as exporter_registry
 

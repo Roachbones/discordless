@@ -3,15 +3,13 @@ import resource
 import shutil
 import os.path
 import os
-import argparse
-import sys
 import time
 
 import filetype
 import logging
-from discord_markdown import discord_markdown_to_html
-from metrics import MetricsReport
-from traffic_parser import *
+from .discord_markdown import discord_markdown_to_html
+from .metrics import MetricsReport
+from .traffic_parser import *
 from itertools import batched
 import jinja2
 
@@ -23,7 +21,7 @@ FILENAME_EXTENSION_MAX_LENGTH = 10
 IMAGE_MIME_TYPES = {"image/webp", "image/png", "image/jpeg","image/gif","image/avif"}
 AUDIO_MIME_TYPES = {"audio/mpeg", "audio/wav", "audio/mp4","audio/aac", "audio/aacp", "audio/webm", "audio/flac"}
 
-jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates/"))
+jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__),"templates/")))
 page_template = jinja_environment.get_template("page.html")
 index_template = jinja_environment.get_template("index.html")
 
@@ -117,23 +115,12 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
             f.write(page)
 
 def write_server_index_file(guild: GuildMetadata, export_directory: str, traffic_archive: TrafficArchive):
-    guild_index_file = os.path.join(export_dir,f"server_{guild.guild_id}.html")
+    guild_index_file = os.path.join(export_directory,f"server_{guild.guild_id}.html")
     with open(guild_index_file, "w") as f:
         page = index_template.render(server=guild)
         f.write(page)
 
-if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(levelname)s: %(message)s")
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("-t","--traffic_archive",default="traffic_archive",help="The directory containing the traffic recordings that should be converted. Defaults to \"traffic_archive\"",metavar="<traffic_archive>")
-    parser.add_argument("-o","--out_dir",default="web_exports",help="The directory to export the HTML files. Defaults to \"web_exports\"",metavar="<out_dir>")
-    parser.add_argument("--limit-guilds", help="Limit the export to the following guild IDs", metavar="<guild id>", action="append", nargs="+")
-    parser.add_argument("--metrics-file", help="Export a prometheus metrics file", metavar="<metrics file>")
-
-    args = parser.parse_args()
-
+def htmeml_exporter_main(args):
     allowed_guilds = None
     if args.limit_guilds:
         allowed_guilds = set()

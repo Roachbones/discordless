@@ -5,8 +5,8 @@ import json
 import os.path
 from typing import Any
 import datetime
-import gateway
-from metrics import MetricsReport
+from . import gateway
+from .metrics import MetricsReport
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ __pycache__/
 
 dcejson_exports/
 html_exports*/
+web_exports/
 reference material/
 traffic_archive*/
 *.flow
