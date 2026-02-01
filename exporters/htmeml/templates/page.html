@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{{ channel_name }} - Page {{ page_index+1 }}</title>
+    <meta name="description" content="List of archived messages: {{ channel_name }} - Page {{ page_index+1 }}">
+    <style>
+        main {
+            max-width: 48em;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .msg-header {
+            margin-top: 0.5em;
+        }
+        .msg-date {
+            font-size: 0.7em;
+            color: gray;
+        }
+        .badlink {
+            color: red;
+            text-decoration: underline;
+        }
+        .msg-attachment-img{
+            max-width: 100%
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <main>
+        <h1>{{ channel_name }} - Page {{ page_index+1 }}</h1>
+        {% for message in messages %}
+        <div id="M{{ message.message_id }}">
+            {% if not (loop.previtem and loop.previtem.author_id == message.author_id) %}
+            <div class="msg-header">
+                <b>{{ message.author_name }}</b>
+                <span class="msg-date">{{ message.get_message_datetime().strftime("%-d %b %Y %H:%M") }}</span>
+            </div>
+            {% endif %}
+            {{ message.content }}
+            {% for attachment in message.attachments %}
+                <div>
+                    {% if attachment_data[attachment.attachment_id].file_name %}
+                        {% if attachment_data[attachment.attachment_id].is_image %}
+                            <img class="msg-attachment-img" src="attachments/{{ attachment_data[attachment.attachment_id].file_name }}" alt="image: {{ attachment.file_name }}" />
+                        {% elif attachment_data[attachment.attachment_id].is_audio %}
+                            <audio controls src="attachments/{{ attachment_data[attachment.attachment_id].file_name }}"></audio>
+                        {% else %}
+                            <a href="attachments/{{ attachment_data[attachment.attachment_id].file_name }}">file: {{ attachment.file_name }}</a>
+                        {% endif %}
+                    {% else %}
+                        <span class="badlink">file: {{ attachment.file_name }} [not recorded]</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <hr>
+    </main>
+
+    <footer>
+        {% if page_index!=nav_start %}
+        <a href="page_{{ page_index }}.html">Previous</a>
+        {% else %}
+        <span>Previous</span>
+        {% endif %}
+
+        {% for i in range(nav_start, nav_end+1) %}
+        {% if i==page_index %}
+        <span>{{i+1}}</span>
+        {% else %}
+        <a href="page_{{ i+1 }}.html">{{i+1}}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_index!=nav_end %}
+        <a href="page_{{ page_index+2 }}.html">Next</a>
+        {% else %}
+        <span>Next</span>
+        {% endif %}
+    </footer>
+</div>
+</body>
+</html>
