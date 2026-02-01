@@ -33,7 +33,7 @@ Here are example commands you can use on Ubuntu. Assumes you use Python 3.9, but
 Mostly the same as the Debian-based Linux setup.
 
 - Install Python 3.9+
-- Install erlpack: `pip install pyzstd filetype erlpack python-dateutilf`
+- Install erlpack: `pip install pyzstd filetype erlpack python-dateutil`
 - [Install mitmproxy](https://docs.mitmproxy.org/stable/overview-installation/#macos): `brew install mitmproxy`
 - Run mitmproxy at least once to generate its certificate: `mitmproxy`
 - [Install mitmproxy's certificate](https://docs.mitmproxy.org/stable/concepts-certificates/#quick-setup): `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
@@ -53,7 +53,7 @@ git clone https://github.com/Roachbones/discordless
 cd discordless
 ```
 
-Update pip and install `pyzstd`, `erlpack` and `python-dateutil` dependencies:
+Update pip and install `pyzstd`, `erlpack`, `filetype` and `python-dateutil` dependencies:
 ```
 py -m pip install --upgrade pip
 py -m pip install python-dateutil filetype pyzstd erlpack
@@ -121,19 +121,23 @@ discord --proxy-server=localhost:8080
 
 ## Step two: export archived traffic to DCE-style JSON (or HTML)
 
-If Wumpus In The Middle is still running, restart it (ctrl+c in the terminal) to ensure it flushes its file buffers. Then run `dcejson_exporter.py` or `html_exporter.py` to turn the data in `traffic_archive/` into an export.
+If Wumpus In The Middle is still running, restart it (ctrl+c in the terminal) to ensure it flushes its file buffers. Then run `exporter.py` to turn the data in `traffic_archive/` into an export.
 
 ### DCE-style JSON
 
-`dcejson_exporter.py` reads the data in `traffic_archive` and outputs a [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter)-style JSON export to `dcejson_exports/export_{current Unix time}/`. You can feed that export into [DiscordChatExporter-frontend](https://github.com/slatinsky/DiscordChatExporter-frontend) to neatly display it in a Discord-style interface.
+`python3 exporter.py dcejson-exporter` reads the data in `traffic_archive` and outputs a [DiscordChatExporter](https://github.com/Tyrrrz/DiscordChatExporter)-style JSON export to `dcejson_exports/export_{current Unix time}/`. You can feed that export into [DiscordChatExporter-frontend](https://github.com/slatinsky/DiscordChatExporter-frontend) to neatly display it in a Discord-style interface.
 
-(For Docker users, you can run this by running `docker exec discordless-discordless-1 python dcejson_exporter.py && docker restart discordless-dcebox-frontend-1`. You can do this in any directory, though the files will be stored in `$PROJECT_ROOT/dcejson_exports`.)
+(For Docker users, you can run this by running `docker exec discordless-discordless-1 python exporter.py dcejson-exporter && docker restart discordless-dcebox-frontend-1`. You can do this in any directory, though the files will be stored in `$PROJECT_ROOT/dcejson_exports`.)
+
+Run `python3 exporter.py dcejson-exporter -h` to see additional export options.
 
 ### HTML
 
 HTML exporting is half-baked at this point; embeds do not work, and there's no pagination. It can show some extra data, though, like message edit history.
 
-You can run `html_exporter.py` similar to `dcejson_exporter.py`.
+You can run `python3 exporter.py html-exporter` similar to the DCE-JSON option.
+
+Run `python3 exporter.py html-exporter -h` to see additional export options.
 
 ## Step three: view the export
 
@@ -156,18 +160,19 @@ Although you can connect multiple devices to the same Wumpus In The Middle insta
 
 ## Directory structure
 
-- Wumpus In The Middle saves Discord traffic to a neighboring directory called `traffic_archive/`. `chatlog_exporter.py` reads the data in this directory. This directory will grow over time. Contents:
+- Wumpus In The Middle saves Discord traffic to a neighboring directory called `traffic_archive/`. This directory will grow over time. Contents:
 	- `request_index`:
 	Keeps track of metadata for each recorded HTTPS response. Each line is structured like `{timestamp} {method (GET or POST)} {url} {response hash} {filename}`. The filename points to a file in `traffic_archive/requests/` which contains the response contents. 
 	- `requests/`: Stores response contents. Contents tracked in `request_index/`.
 	- `gateway_index`: Tracks metadata for each recorded Gateway (websocket) connection. Each line is structured like `{timestamp} {url} {filename prefix}`. The filename prefix points to a pair of files in `traffic_archive/gateways/`, which end in `_data` and `_timeline`.
 	- `gateways/`: Stores compressed Gateway "message" contents and timing information, in pairs of files ending in `_data` and `_timeline` respectively. Each Gateway lasts a long time (like, until you quit the client), and is tranport compressed via zlib. The `_data` file contains the entire Gateway "response"/"stream" (every "message" concatenated together) while the `_timeline` file keeps track of when each compressed "chunk"/"message" was received. Each line of the `_timeline` file is structured like `{timestamp} {chunk length}`.
-- `dcejson_exporter.py` exports to `dcejson_exports/`. Each export is a directory named something like `export_1686901312` where the number is the Unix time that the export was made.
-- `html_exporter.py` similarly exports to `html_exports/`.
-- `html_template/` stores some static files that `html_exporter.py` uses to generate HTML exports.
-	- `html_template/style.css` is a stylesheet that gets copied to every HTML export.
-	- `html_template/index.html` is a Jinja template that gets filled with chatlog data to render HTML exports.
-
+- `exporter.py` calls different exporter backend in `exporters`
+    -  `exporters/html` contains all files related to the html exporter.
+    -  `exporters/dcejson` contains all files related to the dcejson exporter
+    -  `exporters/parse_gateway.py` and `exporters/registry.py` contain utilities for individual exporters
+- `dcejson_exports` and `html_exports` hold the exported dcejson respectively html files from exports
+- All files containing "docker" in some form are related to the docker image
+- `wumpus_in_the_middle.py` is the traffic recorder
 
 # Limitations
 
