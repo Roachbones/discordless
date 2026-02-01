@@ -133,11 +133,23 @@ Run `python3 exporter.py dcejson-exporter -h` to see additional export options.
 
 ### HTML
 
+There are two HTML backends: The classical HTML exporter and HTMemL.
+
+##### Classical HTML
 HTML exporting is half-baked at this point; embeds do not work, and there's no pagination. It can show some extra data, though, like message edit history.
 
 You can run `python3 exporter.py html-exporter` similar to the DCE-JSON option.
 
 Run `python3 exporter.py html-exporter -h` to see additional export options.
+
+##### HTMemL
+HTMemL is an optimized HTML exporter that does not use nearly as much memory as the classical HTML exporter. It has been built to export a discord server as a public message archive (a bit like a forum or mailing list archive). 
+It supports pagination, attachments, and even some discord markdown.
+However, it does come with differences compared to the classical exporter: It doesn't show the message edit history, and it doesn't try to imitate the discord UI.
+
+You can invoke it like this: `python3 exporter.py htmeml-exporter`
+
+Run `python3 exporter.py htmeml-exporter -h` to see additional export options.
 
 ## Step three: view the export
 

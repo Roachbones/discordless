@@ -6,3 +6,6 @@
 /.dockerignore
 /doc_images
 /traffic_archive
+/dcejson_exports/
+/html_exports*/
+/web_exports/

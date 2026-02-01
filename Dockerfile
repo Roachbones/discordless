@@ -3,7 +3,7 @@ FROM mitmproxy/mitmproxy:12.1.2
 WORKDIR /app
 RUN apt-get update &&\
     apt-get install -y g++ &&\
-    pip install python-dateutil pyzstd filetype erlpack
+    pip install python-dateutil pyzstd filetype erlpack jinja2
 COPY . .
 
 EXPOSE 8080

@@ -1,5 +1,7 @@
 """
 Parses Discord's zlib-encoded Gateway/websocket messages.
+
+TODO: see in how far this can be merged back with the other exporters gateway handling
 """
 import logging
 import zlib
