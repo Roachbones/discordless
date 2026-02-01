@@ -9,6 +9,7 @@ traffic_archive*/
 *.flow
 *.zip
 scrapped*
+metrics.txt
 mitmproxy
 mitmdump
 mitmweb
