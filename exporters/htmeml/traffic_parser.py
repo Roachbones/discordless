@@ -5,7 +5,7 @@ import json
 import os.path
 from typing import Any
 import datetime
-from . import gateway
+from .. import parse_gateway
 from .metrics import MetricsReport
 
 logger = logging.getLogger(__name__)
@@ -253,7 +253,7 @@ def parse_channel_history(channel_files: list[ChannelMessageFile]) -> ChannelMes
 
 
 def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, traffic_archive: TrafficArchive):
-    for message in gateway.parse_gateway_recording(gateway_timeline, gateway_data, url):
+    for message in parse_gateway.parse_gateway_recording(gateway_timeline, gateway_data, url):
         message_type = message["t"]
         data = message["d"]
 
