@@ -5,10 +5,15 @@ Let me know if you see others.
 """
 import logging
 import zlib
-import pyzstd
 import json
 import erlpack
 import urllib.parse
+
+# use the python standard library zstd if it is available (python 3.14+)
+try:
+    import compression.zstd as zstd
+except ImportError:
+    import pyzstd as zstd
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +72,7 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
     if is_zlib:
         decompressor = zlib.decompressobj()
     elif is_zstd:
-        decompressor = pyzstd.ZstdDecompressor()
+        decompressor = zstd.ZstdDecompressor()
     if decompressor is None:
         logger.error(f"discord websocket traffic is encoded in an unsupported compression scheme: '{compression_scheme}'")
         return
