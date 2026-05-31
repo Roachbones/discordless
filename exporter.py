@@ -17,10 +17,14 @@ def uwu_exporter(args):
     print("Successfully registered an exporter. UwU. giggle =", args.giggle)
 """
 
+import logging
+import sys
+
 # noinspection PyUnusedImports
 import exporters.html, exporters.dcejson, exporters.htmeml
 
 import exporters.registry as exporter_registry
 
 if __name__ == "__main__":
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format="%(levelname)s: %(message)s")
     exporter_registry.parse_args_and_run()

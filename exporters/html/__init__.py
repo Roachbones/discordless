@@ -7,7 +7,7 @@ todo:
     render embeds
     code is duplicated between here and dcejson_exporter. refactor that.
 """
-
+import logging
 import os
 import re
 import json
@@ -22,6 +22,8 @@ import argparse
 
 from .. import parse_gateway
 from .. import registry
+
+logger = logging.getLogger(__name__)
 
 # Arguments specific to the HTML exporter
 arg_parser = argparse.ArgumentParser()
@@ -189,8 +191,7 @@ or just the ID I guess? Need to document further
 def observe_dmo(seen_timestamp, dmo, saw_update, channel_messages, channel_id=None, message_id=None):
     if dmo is not None:
         if "code" in dmo:
-            print("skipping dmo with code",dmo["code"])
-            #pprint(dmo)
+            logger.info("skipping dmo with code",dmo["code"])
             # todo: support "Cannot send messages to this user", code 50007
             return
         channel_id = int(dmo["channel_id"])
@@ -279,7 +280,7 @@ def html_exporter_main(options):
                     try:
                         dmos = json.load(request_file)
                     except:
-                        print("ignoring invalid json")
+                        logger.info("ignoring invalid json")
                 if isinstance(dmos, dict):  # if there's only one then they erroenously fail to encapsulate it in an array??
                     dmos = [dmos]
                 for dmo in dmos:
@@ -311,7 +312,7 @@ def html_exporter_main(options):
                 elif event_name == "READY":
                     pass
 
-    print("Collected {} messages and {} attachments from {} channels.".format(
+    logger.info("Collected {} messages and {} attachments from {} channels.".format(
         sum(len(messages) for messages in channel_messages.values()),
         len(all_attachments),
         len(channel_messages)
@@ -335,7 +336,7 @@ def html_exporter_main(options):
                     authors[author_id] = author_username
             conversation_name = "-".join(sorted(authors.values())) # example: chase-vivian
 
-            print("Sorted {} messages in the {} channel. (channel id {})".format(
+            logger.info("Sorted {} messages in the {} channel. (channel id {})".format(
                 len(provenances),
                 channel_id,#conversation_name,
                 channel_id
@@ -459,7 +460,6 @@ def html_exporter_main(options):
                                 else:
                                     edition["attachment_links"].append(chatlog_attachment_rel_path)
                             else: # We don't have the attachment archived, so just give a link to it.
-                                #print(attachment["proxy_url"], attachment_id, " not in all_attachments")
                                 edition["attachment_links"].append(attachment["proxy_url"])
 
                     # Show *something* for embeds, at least. Needs workshopped.
@@ -475,7 +475,6 @@ def html_exporter_main(options):
                             edition["system_text"] += "."
                         elif dmo["type"] == 7: # server join
                             edition["system_text"] = "joined the server."
-                            #pprint(dmo)
                         elif dmo["type"] == 19: # reply
                             edition["system_text"] = "replied"
                             if "referenced_message" in dmo and dmo["referenced_message"] is not None: # todo: support message_reference + cross-channel links or whatever
@@ -503,7 +502,7 @@ def html_exporter_main(options):
                 prev_creation_timestamp = provenance.creation_timestamp
                 prev_author_id = chatlog_message["author_id"]
 
-            print("Prepared chatlog.")
+            logger.info("Prepared chatlog.")
 
             with open(os.path.join(chatlog_path, "chatlog.html"), "w") as file:
                 file.write(template.render(
@@ -511,14 +510,14 @@ def html_exporter_main(options):
                     conversation_name=conversation_name
                 ))
 
-            print("Rendered chatlog.")
+            logger.info("Rendered chatlog.")
 
             with open(os.path.join(chatlog_path, "style.css"), "w") as file:
                 file.write(chatlog_style)
 
-            print("Chatlog saved to {}.\n".format(chatlog_path))
+            logger.info("Chatlog saved to {}.".format(chatlog_path))
 
-    print("All done. UwU")
+    logger.info("All done. UwU")
 
 
 

@@ -165,7 +165,7 @@ def parse_guild_profile_file(guild_profile_request_file: str):
         content = json.load(f)
         if "name" in content:
             return content["name"]
-        print(f"error: guild profile doesn't contain name: {content}")
+        logger.error(f"error: guild profile doesn't contain name: {content}")
         return None
 
 

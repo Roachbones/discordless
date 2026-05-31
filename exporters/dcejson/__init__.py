@@ -18,7 +18,7 @@ defined (loosely) by https://discord.com/developers/docs/resources/user#user-obj
 "dmo" means Discord Message Object, aka a "message dao".
 todo: make these names more consistent.
 """
-
+import logging
 import os
 import re
 import json
@@ -31,6 +31,8 @@ import argparse
 
 from .. import parse_gateway
 from .. import registry
+
+logger = logging.getLogger(__name__)
 
 # Arguments specific to the dcejson exporter
 arg_parser = argparse.ArgumentParser()
@@ -338,7 +340,7 @@ def dcesjon_exporter_main(options):
         def __init__(self, seen_timestamp, dmo_or_message_id, mechanism):
             self.seen_timestamp = seen_timestamp
             if isinstance(dmo_or_message_id, str):
-                print(dmo_or_message_id)
+                logger.debug(dmo_or_message_id)
             if isinstance(dmo_or_message_id, int):
                 self.dmo = None
                 self.message_id = dmo_or_message_id
@@ -376,12 +378,11 @@ def dcesjon_exporter_main(options):
             if "author" in dmo:
                 observe_user(seen_timestamp, dmo["author"])
             if "code" in dmo:
-                print("skipping dmo with code",dmo["code"])
-                #pprint(dmo)
+                logger.info("skipping dmo with code",dmo["code"])
                 # todo: support "Cannot send messages to this user", code 50007
                 return
             if "captcha_key" in dmo:
-                print("skipping dmo with captcha_key")
+                logger.info("skipping dmo with captcha_key")
                 return
             channel_id = int(dmo["channel_id"])
             message_id = int(dmo["id"])
@@ -399,9 +400,9 @@ def dcesjon_exporter_main(options):
     start_time = time.time()
 
     # We print channel names later (which often include emoji), so try printing 🧿 to test if it crashes the output device.
-    print("\n 🧿 Initializing export 🧿 \n") # If this crashes, your terminal lacks sufficient Unicode support.
+    logger.info("🧿 Initializing export 🧿") # If this crashes, your terminal lacks sufficient Unicode support.
 
-    print("Analyzing REST traffic.") # todo: report progress percentage
+    logger.info("Analyzing REST traffic.") # todo: report progress percentage
     with open(os.path.join(ARCHIVE_PATH, "request_index")) as file:
         for line in file:
             seen_timestamp, method, url, response_hash, filename = line.split()
@@ -419,7 +420,7 @@ def dcesjon_exporter_main(options):
                         # This can happen due to a Discord outage where we got some error page served instead of the JSON response.
                         # We might want to change Wumpus In The Middle to account for that - maybe track response codes?
                         # But for now, it seems easy to just filter out invalid JSON.
-                        print("skipping invalid json") # todo: clean this up?
+                        logger.info("skipping invalid json") # todo: clean this up?
                         continue
                 if isinstance(dmos, dict): # if there's only one then Discord fails to encapsulate it in an array??
                     dmos = [dmos]
@@ -442,14 +443,14 @@ def dcesjon_exporter_main(options):
                 observe_cdnimage(url, path)
 
 
-    print("Analyzing websocket traffic.")
+    logger.info("Analyzing websocket traffic.")
     with open(os.path.join(ARCHIVE_PATH, "gateway_index")) as file:
         for line in file:
             seen_timestamp, url, gateway_path_base = line.rstrip().split(" ", maxsplit=2)
             try:
                 seen_timestamp = datetime.datetime.fromtimestamp(float(seen_timestamp), tz=datetime.timezone.utc)
             except ValueError:
-                print(f"Incorrect seen timestamp: {seen_timestamp}")
+                logger.info(f"Incorrect seen timestamp: {seen_timestamp}")
                 continue
             for payload in parse_gateway.parse_gateway(os.path.join(ARCHIVE_PATH, "gateways", gateway_path_base), url):
                 # Discord calls payload["d"] both "inner payload" and "event data", which are both bad names.
@@ -486,7 +487,7 @@ def dcesjon_exporter_main(options):
                             assert "member" in op_item
                             observe_member(seen_timestamp, op_item["member"], int(event["guild_id"]))
 
-    print("Collected {} messages, {} attachmentoids, and {} CDN images.".format(
+    logger.info("Collected {} messages, {} attachmentoids, and {} CDN images.".format(
         sum(len(messages) for messages in channel_messages.values()),
         len(attachmentoids),
         len(cdnimages)
@@ -600,23 +601,23 @@ def dcesjon_exporter_main(options):
             return url
 
     if DRY_RUN:
-        print("DRY_RUN is True, so not actually exporting anything this time.")
+        logger.info("DRY_RUN is True, so not actually exporting anything this time.")
 
-    print("Exporting DiscordChatExporter-style JSON to {}.".format(EXPORT_DIR))
+    logger.info("Exporting DiscordChatExporter-style JSON to {}.".format(EXPORT_DIR))
 
     for channel_id, message_id_to_provenance in channel_messages.items():
         if CHANNELS_TO_EXPORT_IDS is not None and channel_id not in CHANNELS_TO_EXPORT_IDS:
             continue
 
         if channel_id not in channel_impressions:
-            print("skipping unidentified channel {}. ><'".format(channel_id))
+            logger.info("skipping unidentified channel {}. ><'".format(channel_id))
             continue
 
         _, channel_dao = channel_impressions[channel_id]
         guild_id = channel_id_to_guild_id[channel_id]
 
         if (guild_id is not None) and (guild_id not in guild_impressions):
-            print("Skipping channel with unidentified guild {}. U_U".format(channel.guild_id))
+            logger.info("Skipping channel with unidentified guild {}. U_U".format(channel.guild_id))
             continue
 
         channel_name = channel_dao.get("name")
@@ -652,7 +653,7 @@ def dcesjon_exporter_main(options):
             guildicon_name_suggestion = guild_name
             guildicon_downloaded_path = find_guildicon(guild_id, guild_dao["properties"]["icon"])
 
-        print("Exporting " + channel_name)
+        logger.info("Exporting " + channel_name)
 
         dce_guildicon_url = None
         if guildicon_downloaded_path is not None:
@@ -670,7 +671,7 @@ def dcesjon_exporter_main(options):
                 channel_parent_name = channel_impressions[channel_parent_id][1]["name"]
             else:
                 channel_parent_name = "UNKNOWN CHANNEL PARENT >~<'"
-                print("Failed to identify parent channel for {} [{}].".format(channel_dao["name"], channel_id))
+                logger.info("Failed to identify parent channel for {} [{}].".format(channel_dao["name"], channel_id))
         else:
             channel_parent_name = None
 
@@ -701,7 +702,7 @@ def dcesjon_exporter_main(options):
                 continue
 
             if "timestamp" not in dmo: # Not sure why this happens. Messages of type "article"?
-                print("Skipping timestampless message.")
+                logger.info("Skipping timestampless message.")
                 continue
             message_sent_time = get_dmo_time(dmo)
 
@@ -855,18 +856,19 @@ def dcesjon_exporter_main(options):
     target_asset_paths = set()
     for target_asset_path in mirrored_assets.values():
         if target_asset_path in target_asset_paths:
-            print("oh uh, asset name collision >~<' " + target_asset_path)
+            logger.info("oh uh, asset name collision >~<' " + target_asset_path)
         target_asset_paths.add(target_asset_path)
 
     if not DRY_RUN:
-        print("\nExporting " + str(len(mirrored_assets)) + " assets... >.<'") #todo: report progress
+        logger.info("\nExporting " + str(len(mirrored_assets)) + " assets... >.<'") #todo: report progress
         for source, dest in mirrored_assets.items():
             copyfile(source, dest)
 
-        print("Export saved to " + EXPORT_DIR)
-        print(str(len(mirrored_assets)) + " assets saved to " + EXPORTED_ASSETS_DIR)
+        logger.info("Export saved to " + EXPORT_DIR)
+        logger.info(str(len(mirrored_assets)) + " assets saved to " + EXPORTED_ASSETS_DIR)
         # todo: asset details. how many avatars, etc?
-        if stats["hotlinks"]: print("Hotlinked " + str(stats["hotlinks"]) + " missing assets.")
+        if stats["hotlinks"]:
+            logger.info("Hotlinked " + str(stats["hotlinks"]) + " missing assets.")
 
-    print("Finished in " + str(int((time.time() - start_time) // 60)) + " minutes.")
-    print("\n ✨ All done. UwU ✨ \n")
+    logger.info("Finished in " + str(int((time.time() - start_time) // 60)) + " minutes.")
+    logger.info("✨ All done. UwU ✨")
