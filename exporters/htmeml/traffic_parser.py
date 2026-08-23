@@ -115,6 +115,7 @@ class GuildMetadata:
     def has_accurate_information(self) -> bool:
         return self.name is not None
 
+
 class TrafficArchive:
     def __init__(self, traffic_archive_directory: str):
         self.traffic_archive_directory: str = traffic_archive_directory
@@ -179,7 +180,6 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive, metrics
             if seen_timestamp > latest_timestamp:
                 latest_timestamp = seen_timestamp
 
-
             # message files
             match = re.match(r"https://discord.com/api/v9/channels/(\d*)/messages(\?|$)", url)
             if match:
@@ -214,6 +214,11 @@ def parse_request_index_file(file: str, traffic_archive: TrafficArchive, metrics
                 if attachment_id not in traffic_archive.attachment_files:
                     traffic_archive.attachment_files[attachment_id] = AttachmentFile(channel_id, attachment_id)
                 traffic_archive.attachment_files[attachment_id].files.append(traffic_archive.file_path("requests", filename))
+
+            # forum search (to discover forum threads)
+            match = re.match(r"https://discord.com/api/v9/channels/(\d*)/threads/search.*", url)
+            if match:
+                parse_forum_thread_search_file(traffic_archive.file_path("requests", filename), traffic_archive)
 
     metrics.latest_request_timestamp = latest_timestamp
 
@@ -250,6 +255,31 @@ def parse_channel_history(channel_files: list[ChannelMessageFile]) -> ChannelMes
         parse_channel_message_file(channel_file, history)
 
     return history
+
+
+def parse_forum_thread_search_file(file: str, traffic_archive: TrafficArchive):
+    with open(file, "r") as message_file:
+        data = json.load(message_file)
+
+        if not isinstance(data, dict):
+            logger.error(f"skipping forum thread search file {file} due to unexpected schema")
+            return
+        if "threads" not in data or not isinstance(data["threads"], list):
+            logger.error(f"skipping forum thread search file {file} due to unexpected schema")
+            return
+
+        for thread in data["threads"]:
+            thread_name = thread["name"]
+            channel_id = int(thread["id"])
+            guild_id = int(thread["guild_id"])
+
+            guild_meta = traffic_archive.get_guild_metadata(guild_id)
+            channel_meta = traffic_archive.get_channel_metadata(channel_id)
+
+            # link the channel to its name and server
+            channel_meta.name = f"forum: {thread_name}"
+            channel_meta.guild_id = guild_id
+            guild_meta.channels.add(channel_meta)
 
 
 def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, traffic_archive: TrafficArchive):
