@@ -37,15 +37,20 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
     if channel.guild_id:
         guild = traffic_archive.get_guild_metadata(channel.guild_id)
 
-    channel_directory = os.path.join(export_directory, f"channel_{channel.channel_id}")
-    os.makedirs(channel_directory, exist_ok=True)
-    os.makedirs(os.path.join(channel_directory, "attachments"), exist_ok=True)
-
     messages = list(history.messages.values())
+
+    # skip channels we don't have any recordings
+    if len(messages) < 1:
+        return
+
     messages.sort()
 
     # set flag if any messages are exported
     channel.message_count = len(messages)
+
+    channel_directory = os.path.join(export_directory, f"channel_{channel.channel_id}")
+    os.makedirs(channel_directory, exist_ok=True)
+    os.makedirs(os.path.join(channel_directory, "attachments"), exist_ok=True)
 
     # export to paginated files
     LAST_PAGE = len(messages) // MESSAGES_PER_PAGE
