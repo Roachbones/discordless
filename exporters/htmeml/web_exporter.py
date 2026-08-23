@@ -25,7 +25,8 @@ AUDIO_MIME_TYPES = {"audio/mpeg", "audio/wav", "audio/mp4","audio/aac", "audio/a
 
 jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__),"templates/")))
 page_template = jinja_environment.get_template("page.html")
-index_template = jinja_environment.get_template("index.html")
+channel_index_template = jinja_environment.get_template("channel_index.html")
+server_index_template = jinja_environment.get_template("server_index.html")
 
 
 class AttachmentViewModel:
@@ -121,10 +122,22 @@ def export_channel(channel: ChannelMetadata, history: ChannelMessageHistory, exp
                 attachment_data=attachment_view_models)
             f.write(page)
 
-def write_server_index_file(guild: GuildMetadata, export_directory: str, traffic_archive: TrafficArchive):
+def write_channel_index_file(guild: GuildMetadata, export_directory: str, traffic_archive: TrafficArchive):
     guild_index_file = os.path.join(export_directory,f"server_{guild.guild_id}.html")
     with open(guild_index_file, "w") as f:
-        page = index_template.render(server=guild)
+        page = channel_index_template.render(server=guild)
+        f.write(page)
+
+def write_server_index_file(export_directory: str, allowed_guilds: set[int] | None, traffic_archive: TrafficArchive):
+    server_index_file = os.path.join(export_directory, f"index.html")
+
+    if allowed_guilds is not None:
+        servers = filter(lambda guild: guild.guild_id in allowed_guilds, traffic_archive.get_guilds())
+    else:
+        servers = traffic_archive.get_guilds()
+
+    with open(server_index_file, "w") as f:
+        page = server_index_template.render(servers=servers)
         f.write(page)
 
 def htmeml_exporter_main(args):
@@ -170,7 +183,9 @@ def htmeml_exporter_main(args):
             continue
         if not guild.has_accurate_information():
             logger.warning(f"No accurate information for guild {guild.guild_id}")
-        write_server_index_file(guild, export_dir, archive)
+        write_channel_index_file(guild, export_dir, archive)
+
+    write_server_index_file(export_dir, allowed_guilds, archive)
 
     end_time = time.time()
     metrics.runtime = end_time-start_time
