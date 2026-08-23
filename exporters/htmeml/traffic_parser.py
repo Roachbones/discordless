@@ -293,6 +293,11 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                 guild_id = int(guild["id"])
                 guild_meta = traffic_archive.get_guild_metadata(guild_id)
 
+                if "properties" in guild:
+                    properties = guild["properties"]
+                    if "name" in properties:
+                        guild_meta.name = properties["name"]
+
                 if "channels" in guild:
                     for channel in guild["channels"]:
                         channel_id = int(channel["id"])
