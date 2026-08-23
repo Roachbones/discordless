@@ -298,8 +298,13 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str, 
                         channel_id = int(channel["id"])
 
                         channel_meta = traffic_archive.get_channel_metadata(channel_id)
-                        channel_meta.name = channel["name"]
                         channel_meta.guild_id = guild_id
+
+                        # some channels come with an invalid name
+                        if channel["name"] != "___hidden___":
+                            channel_meta.name = channel["name"]
+                        else:
+                            pass
 
                         guild_meta.channels.add(channel_meta)
 
