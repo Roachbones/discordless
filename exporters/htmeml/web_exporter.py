@@ -1,4 +1,6 @@
 import mimetypes
+
+import math
 import resource
 import shutil
 import os.path
@@ -160,7 +162,7 @@ def htmeml_exporter_main(args):
         if channel.get_guild_id() is None or not archive.has_guild_information(channel.get_guild_id()):
             metrics.unknown_guild_count += 1
 
-    logger.info(f"Found {metrics.unknown_guild_count} ({metrics.unknown_guild_count/archive.get_channel_count():.1f}%) channels without guild (e.g. PMs, or channels where guild information didn't get captured.)")
+    logger.info(f"Found {metrics.unknown_guild_count} ({math.ceil(metrics.unknown_guild_count/archive.get_channel_count()*10)/10:.1f}%) channels without guild (e.g. PMs, or channels where guild information didn't get captured.)")
 
     logger.info("exporting server channel indices...")
     for guild in archive.get_guilds():
