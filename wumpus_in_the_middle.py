@@ -92,13 +92,14 @@ Archives Gateway payloads for a single Gateway connection.
 class Gatekeeper:
     def __init__(self, data_path, timeline_path):
         self.data_file = open(data_path, "xb") # Every payload we get from the Gateway, concatenated.
-        self.timeline_file = open(timeline_path, "x") # Tracks when we got the Gateway payloads. Each line: {timestamp} {number of bytes received at that time}
+        self.timeline_file = open(timeline_path, "x", buffering=1) # Tracks when we got the Gateway payloads. Each line: {timestamp} {number of bytes received at that time}
 
     """
     Save Gateway payload.
     """
     def save(self, message):
         payload_length = self.data_file.write(message.content)
+        self.data_file.flush()
         self.timeline_file.write("{} {}\n".format(message.timestamp, payload_length))
     
     def done(self):
