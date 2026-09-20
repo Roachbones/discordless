@@ -116,7 +116,12 @@ def parse_gateway_recording(gateway_timeline: str, gateway_data: str, url: str):
             if query["encoding"] == "json":
                 payload = json.loads(payload.decode())
             elif query["encoding"] == "etf":
-                payload = deserialize_erlpackage(erlpack.unpack(payload))
+                try:
+                    payload = deserialize_erlpackage(erlpack.unpack(payload))
+                except Exception as e:
+                    print(e)
+                    return
+
             else:
                 assert 0, "Unrecognized querystring " + querystring + ", did Discord upgrade its API version?"
 
