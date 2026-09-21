@@ -384,8 +384,12 @@ def dcesjon_exporter_main(options):
             if "captcha_key" in dmo:
                 logger.info("skipping dmo with captcha_key")
                 return
-            channel_id = int(dmo["channel_id"])
-            message_id = int(dmo["id"])
+            try:
+                channel_id = int(dmo["channel_id"])
+                message_id = int(dmo["id"])
+            except:
+                print("Invalid DMO", dmo)
+                return
 
         observation = MessageObservation(seen_timestamp, dmo or message_id, saw_update)
         if channel_id not in channel_messages:
