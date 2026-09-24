@@ -88,11 +88,11 @@ Your mitmproxy certificate will be stored in `~/.mitmproxy`. [Install mitmproxy'
 
 ## Step one: data collection - Debian based Linux
 
-Start the proxy server: `mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))(?::\d+)?$'`
+Start the proxy server: `mitmdump -s wumpus_in_the_middle.py --listen-port=8080`
 
 (For Docker users, as long as your server is up, you do not need to run this.)
 
-Start Discord, connected to the proxy server. If you're on a PC, you can do `discord --proxy-server=localhost:8080` to start an instance of Discord connected to the proxy without having to configure your whole computer to use the proxy. You can replace `localhost:8080` with some other address if the proxy server is running on a different device. If you're on mobile, or otherwise don't want to use that commandline argument, then configure the whole device to use the proxy server in the network settings. Due to the `--allow-hosts` argument we pass to mitmproxy, it should not interfere much with non-Discord traffic.
+Start Discord, connected to the proxy server. If you're on a PC, you can do `discord --proxy-server=localhost:8080` to start an instance of Discord connected to the proxy without having to configure your whole computer to use the proxy. You can replace `localhost:8080` with some other address if the proxy server is running on a different device. If you're on mobile, or otherwise don't want to use that commandline argument, then configure the whole device to use the proxy server in the network settings.
 
 You can tell that data collection is working if `traffic_archive/requests/` starts filling up.
 
@@ -107,7 +107,7 @@ discordapp.Discord --proxy-server=localhost:8080 @@u %U @@`
 
 Start the proxy server in the first command prompt (Windows key + R, type `cmd` and press Enter):
 ```
-mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts "^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))(?::\d+)?$"
+mitmdump -s wumpus_in_the_middle.py --listen-port=8080
 ```
 
 Discord executable is not in PATH; we need to find it manually. Open second command prompt (Windows key + R, type `cmd` and press Enter)
@@ -163,10 +163,11 @@ Open one of the folders in the export (each folder corresponding to a channel, b
 
 ## More technical details
 
-Here's a breakdown of the Wumpus In The Middle invocation command (`mitmdump -s wumpus_in_the_middle.py --listen-port=8080 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))(?::\d+)?$'`):
+Here's a breakdown of the Wumpus In The Middle invocation command (`mitmdump -s wumpus_in_the_middle.py --listen-port=8080`):
 - `--listen-port=8080` tells mitmdump to run the proxy server on port 8080. Feel free to change this.
-- `--allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net))(?::\d+)?$'` tells mitmproxy to not intercept any https traffic besides traffic to Discord. This is a little redundant since Wumpus In The Middle is also programmed to focus on Discord traffic, but this improves performance and helps to avoid interfering with any sites that have strict certificate policies.
 - In theory, you can also add ` --proxyauth 'username:password'` to the end to require authentication to connect to the proxy. However, I haven't been able to get this to work when connecting to the proxy from my iPhone; I get 407 errors even if I specify proxy authentication in my phone's network settings. **Let me know if you get it to work!**
+
+Internally, Wumpus In The Middle sets the `allow_hosts` configuration option, to tell mitmproxy to not intercept any https traffic besides traffic to Discord. This is a little redundant since Wumpus In The Middle is also programmed to focus on Discord traffic, but this improves performance and helps to avoid interfering with any sites that have strict certificate policies.
 
 Although you can connect multiple devices to the same Wumpus In The Middle instance, do not do so with multiple Discord accounts; Discordless currently assumes that all traffic is from one account and does not distinguish between multiple accounts. (I guess you could make a conglomerate archive of all of the servers of multiple accounts if you wanted, though.)
 
@@ -224,7 +225,7 @@ For me, the usual mitmproxy workflow of [installing a mitmproxy root certificate
 If you want to work on Wumpus In The Middle (the mitmproxy script), then it can be handy to prepare a .flow file for testing purposes. Mitmproxy's .flow files are used to "replay" web traffic. This way, instead of having to open Discord every time you want to test Wumpus In The Middle, you can just record a sample of Discord traffic to a file ("`discord_dump.flow`") and feed that into Wumpus In The Middle every time you test it.
 
 ### Part one: record traffic
-`mitmproxy -w discord_dump.flow --set stream_large_bodies=100k --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))(?::\d+)?$'`
+`mitmproxy -w discord_dump.flow --set stream_large_bodies=100k`
 `-w discord_dump.flow` tells mitmproxy to output all the traffic logs to a file named `discord_dump.flow`. This clobbers any existing file at that path.
 
 Once you start recording, do some stuff on Discord. Scroll through channels, send messages, that sort of thing. You may want to restart your Discord client, and disable cache if you're using in-browser Discord, to make sure you re-fetch assets.

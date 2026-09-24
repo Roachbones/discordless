@@ -22,7 +22,7 @@ Saves the following to traffic_archive/:
      while the _timeline file keeps track of when each compressed "chunk"/"message" of the response was received.
      Each line of the _timeline file is {timestamp} {chunk length}.
 
-Invoke like: mitmdump -s wumpus_in_the_middle.py --listen-port=8181 --allow-hosts '^(((.+\.)?discord\.com)|((.+\.)?discordapp\.com)|((.+\.)?discord\.net)|((.+\.)?discordapp\.net)|((.+\.)?discord\.gg))$'
+Invoke like: mitmdump -s wumpus_in_the_middle.py --listen-port=8181
 
 todo:
     rename stuff for clarity?
@@ -32,12 +32,13 @@ todo:
 
 """
 
-from mitmproxy import http, ctx
+from mitmproxy import http, ctx, addonmanager
 from urllib.parse import urlparse
 import time
 import os
 import json
 import zlib
+import re
 from base64 import b64encode
 
 # Sniff traffic to these domains and their subdomains.
@@ -201,6 +202,15 @@ class DiscordArchiver:
             for gatekeeper in self.gatekeepers.values():
                 gatekeeper.done()
 
+class AllowedHosts:
+    def load(self, loader: addonmanager.Loader) -> None:
+        loader.add_option("override_allow_hosts", bool, True, "Should Discordless automatically set the --allow-hosts setting?")
+
+    def configure(self, updated: set[str]):
+        if "override_allow_hosts" in updated and ctx.options.override_allow_hosts:
+            ctx.options.allow_hosts = [re.escape(host) for host in DISCORD_DOMAINS]
+
 addons = [
-    DiscordArchiver()
+    DiscordArchiver(),
+    AllowedHosts(),
 ]
